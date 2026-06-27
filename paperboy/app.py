@@ -47,7 +47,7 @@ class ResearchFeedApp(App[None]):
         super().__init__()
         self._config = config or load_config()
         self._store = ReadStateStore()
-        self._registry = self._build_registry()
+        self._sources = self._build_registry()
 
     def _build_registry(self) -> SourceRegistry:
         cfg = self._config
@@ -94,7 +94,7 @@ class ResearchFeedApp(App[None]):
         """Fetch papers from all sources in a background worker."""
         self.loading = True
         try:
-            papers = await self._registry.fetch_all(limit=self._config.app.max_papers)
+            papers = await self._sources.fetch_all(limit=self._config.app.max_papers)
             read_ids = self._store.get_all_read_ids()
             papers = [p.with_read_state(p.id in read_ids) for p in papers]
             pl = self.query_one("#paper-list", PaperList)

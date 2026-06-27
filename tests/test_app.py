@@ -48,7 +48,7 @@ class _FakeRegistry:
 
 def _make_app(papers: list[Paper], tmp_path: Path) -> ResearchFeedApp:
     app = ResearchFeedApp(config=Config())
-    app._registry = _FakeRegistry(papers)  # type: ignore[assignment]
+    app._sources = _FakeRegistry(papers)  # type: ignore[assignment]
     app._store = ReadStateStore(db_path=tmp_path / "test.db")
     return app
 
