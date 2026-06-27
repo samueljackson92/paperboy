@@ -5,6 +5,7 @@ import webbrowser
 
 from textual.app import ComposeResult
 from textual.binding import Binding
+from textual.containers import Horizontal
 from textual.screen import ModalScreen
 from textual.widgets import Button, Markdown, Static
 
@@ -27,33 +28,22 @@ class DetailView(ModalScreen[None]):
     def compose(self) -> ComposeResult:
         p = self._paper
         authors_str = ", ".join(p.authors) if p.authors else "Unknown"
-        cats_str = ", ".join(p.categories) if p.categories else "—"
-        venue_str = p.venue or "—"
         date_str = p.published.strftime("%Y-%m-%d")
-        content = f"""# {p.title}
+        meta_parts = [p.source, date_str]
+        if p.venue and p.venue != p.source:
+            meta_parts.insert(1, p.venue)
+        if p.categories:
+            meta_parts.append(", ".join(p.categories))
 
-**Authors:** {authors_str}
-
-**Source:** {p.source} | **Venue:** {venue_str} | **Date:** {date_str}
-
-**Categories:** {cats_str}
-
----
-
-## Abstract
-
-{p.abstract or '_No abstract available._'}
-
----
-
-**PDF:** {p.pdf_url or '—'}  
-**URL:** {p.html_url or '—'}
-"""
         with Static(id="detail-container"):
-            yield Markdown(content, id="detail-markdown")
-            yield Button("Close [Esc]", id="close-btn", variant="default")
-            if p.pdf_url:
-                yield Button("Open PDF [o]", id="pdf-btn", variant="primary")
+            yield Static(p.title, id="detail-title")
+            yield Static(authors_str, id="detail-authors")
+            yield Static(" · ".join(meta_parts), id="detail-meta")
+            yield Markdown(p.abstract or "_No abstract available._", id="detail-markdown")
+            with Horizontal(id="detail-actions"):
+                yield Button("Close", id="close-btn", variant="default")
+                if p.pdf_url:
+                    yield Button("Open PDF", id="pdf-btn", variant="primary")
 
     def action_dismiss_modal(self) -> None:
         self.dismiss(None)
