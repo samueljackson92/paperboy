@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "paperboy"
+name = "paperboy-tui"
 version = "0.1.0"
 description = "A terminal RSS-style reader for arXiv, OpenReview, and journals"
 readme = "README.md"
