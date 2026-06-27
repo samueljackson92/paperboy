@@ -1,59 +1,57 @@
-"""Detail view modal for a single paper."""
+"""Detail pane widget showing the currently highlighted paper."""
 from __future__ import annotations
 
 import webbrowser
 
 from textual.app import ComposeResult
-from textual.binding import Binding
 from textual.containers import Horizontal
-from textual.screen import ModalScreen
+from textual.widget import Widget
 from textual.widgets import Button, Markdown, Static
 
 from paperboy.models import Paper
 
 
-class DetailView(ModalScreen[None]):
-    """Modal screen showing full paper details."""
+class DetailView(Widget):
+    """Persistent bottom pane showing abstract and metadata for the highlighted paper."""
 
-    BINDINGS = [
-        Binding("escape", "dismiss_modal", "Close", show=True),
-        Binding("q", "dismiss_modal", "Close", show=False),
-        Binding("o", "open_pdf", "Open PDF", show=True),
-    ]
-
-    def __init__(self, paper: Paper) -> None:
-        super().__init__()
-        self._paper = paper
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(**kwargs)
+        self._current_pdf_url: str | None = None
 
     def compose(self) -> ComposeResult:
-        p = self._paper
-        authors_str = ", ".join(p.authors) if p.authors else "Unknown"
-        date_str = p.published.strftime("%Y-%m-%d")
-        meta_parts = [p.source, date_str]
-        if p.venue and p.venue != p.source:
-            meta_parts.insert(1, p.venue)
-        if p.categories:
-            meta_parts.append(", ".join(p.categories))
+        yield Static("", id="detail-title")
+        yield Static("", id="detail-authors")
+        yield Static("", id="detail-meta")
+        yield Markdown("", id="detail-markdown")
+        with Horizontal(id="detail-actions"):
+            yield Button("Open PDF", id="pdf-btn", variant="primary")
 
-        with Static(id="detail-container"):
-            yield Static(p.title, id="detail-title")
-            yield Static(authors_str, id="detail-authors")
-            yield Static(" · ".join(meta_parts), id="detail-meta")
-            yield Markdown(p.abstract or "_No abstract available._", id="detail-markdown")
-            with Horizontal(id="detail-actions"):
-                yield Button("Close", id="close-btn", variant="default")
-                if p.pdf_url:
-                    yield Button("Open PDF", id="pdf-btn", variant="primary")
+    def on_mount(self) -> None:
+        self.query_one("#detail-actions").display = False
 
-    def action_dismiss_modal(self) -> None:
-        self.dismiss(None)
+    def show_paper(self, paper: Paper) -> None:
+        authors_str = ", ".join(paper.authors) if paper.authors else "Unknown"
+        date_str = paper.published.strftime("%Y-%m-%d")
+        meta_parts = [paper.source, date_str]
+        if paper.venue and paper.venue != paper.source:
+            meta_parts.insert(1, paper.venue)
+        if paper.categories:
+            meta_parts.append(", ".join(paper.categories))
 
-    def action_open_pdf(self) -> None:
-        if self._paper.pdf_url:
-            webbrowser.open(self._paper.pdf_url)
+        self.query_one("#detail-title", Static).update(paper.title)
+        self.query_one("#detail-authors", Static).update(authors_str)
+        self.query_one("#detail-meta", Static).update(" · ".join(meta_parts))
+        self.query_one("#detail-markdown", Markdown).update(
+            paper.abstract or "_No abstract available._"
+        )
+
+        self._current_pdf_url = paper.pdf_url
+        self.query_one("#detail-actions").display = bool(paper.pdf_url)
+
+    def open_pdf(self) -> None:
+        if self._current_pdf_url:
+            webbrowser.open(self._current_pdf_url)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "close-btn":
-            self.dismiss(None)
-        elif event.button.id == "pdf-btn":
-            self.action_open_pdf()
+        if event.button.id == "pdf-btn":
+            self.open_pdf()

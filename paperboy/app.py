@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import webbrowser
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -73,6 +72,7 @@ class ResearchFeedApp(App[None]):
         yield Static("", id="status-bar")
         yield PaperList(id="paper-list")
         yield LoadingIndicator(id="loading")
+        yield DetailView(id="detail-view")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -118,20 +118,16 @@ class ResearchFeedApp(App[None]):
         self.push_screen(FilterPanel(pl.source_names, pl.active_filter), handle_filter)
 
     def action_open_pdf(self) -> None:
-        pl = self.query_one("#paper-list", PaperList)
-        table = pl.query_one(DataTable)
-        if table.cursor_row < len(pl._visible_papers):
-            paper = pl._visible_papers[table.cursor_row]
-            if paper.pdf_url:
-                webbrowser.open(paper.pdf_url)
-            else:
-                self.notify("No PDF URL available", severity="warning")
+        self.query_one("#detail-view", DetailView).open_pdf()
 
     def action_move_down(self) -> None:
         self.query_one("#paper-list", PaperList).query_one(DataTable).action_scroll_down()
 
     def action_move_up(self) -> None:
         self.query_one("#paper-list", PaperList).query_one(DataTable).action_scroll_up()
+
+    def on_paper_list_paper_highlighted(self, event: PaperList.PaperHighlighted) -> None:
+        self.query_one("#detail-view", DetailView).show_paper(event.paper)
 
     def on_paper_list_paper_selected(self, event: PaperList.PaperSelected) -> None:
         paper = event.paper
@@ -140,7 +136,6 @@ class ResearchFeedApp(App[None]):
         pl = self.query_one("#paper-list", PaperList)
         pl.update_paper(updated)
         self._update_status()
-        self.push_screen(DetailView(updated), lambda _: self._update_status())
 
     def on_paper_list_paper_toggled(self, event: PaperList.PaperToggled) -> None:
         paper = event.paper

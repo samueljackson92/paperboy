@@ -101,25 +101,17 @@ LoadingIndicator {
     color: $cyan;
 }
 
-/* ── Detail modal ────────────────────────────── */
+/* ── Detail pane ─────────────────────────────── */
 DetailView {
-    align: center middle;
-    background: $bg 70%;
-}
-
-#detail-container {
+    height: 14;
     background: $bg-alt;
-    border: round $purple;
-    width: 80%;
-    height: 85%;
-    padding: 0;
-    overflow: hidden;
+    border-top: tall $surface;
 }
 
 #detail-title {
     color: $green;
     text-style: bold;
-    padding: 1 2 0 2;
+    padding: 0 2;
 }
 
 #detail-authors {
@@ -129,15 +121,14 @@ DetailView {
 
 #detail-meta {
     color: $comment;
-    padding: 0 2 1 2;
-    border-bottom: tall $surface;
+    padding: 0 2;
 }
 
 #detail-markdown {
     background: $bg-alt;
     color: $fg;
     height: 1fr;
-    padding: 1 2;
+    padding: 0 2;
     overflow-y: auto;
 }
 
@@ -146,20 +137,6 @@ DetailView {
     align: right middle;
     padding: 0 2;
     border-top: tall $surface;
-}
-
-#close-btn {
-    width: auto;
-    min-width: 10;
-    background: $surface;
-    color: $fg-sub;
-    border: tall $surface1;
-    margin-left: 1;
-}
-
-#close-btn:hover {
-    background: $surface1;
-    color: $fg;
 }
 
 #pdf-btn {

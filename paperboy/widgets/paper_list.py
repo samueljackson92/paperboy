@@ -36,6 +36,11 @@ class PaperList(Widget):
             super().__init__()
             self.paper = paper
 
+    class PaperHighlighted(Message):
+        def __init__(self, paper: Paper) -> None:
+            super().__init__()
+            self.paper = paper
+
     def __init__(self, papers: list[Paper] | None = None, **kwargs: object) -> None:
         super().__init__(**kwargs)
         self._all_papers: list[Paper] = papers or []
@@ -81,6 +86,9 @@ class PaperList(Widget):
                 date_str,
                 key=paper.id,
             )
+        # Ensure the detail pane reflects the first visible paper after every rebuild.
+        if self._visible_papers:
+            self.post_message(self.PaperHighlighted(self._visible_papers[0]))
 
     def action_select_paper(self) -> None:
         table = self.query_one(DataTable)
@@ -95,6 +103,10 @@ class PaperList(Widget):
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         if event.cursor_row < len(self._visible_papers):
             self.post_message(self.PaperSelected(self._visible_papers[event.cursor_row]))
+
+    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
+        if event.cursor_row < len(self._visible_papers):
+            self.post_message(self.PaperHighlighted(self._visible_papers[event.cursor_row]))
 
     def update_paper(self, updated: Paper) -> None:
         """Replace one paper in-place and re-render."""
