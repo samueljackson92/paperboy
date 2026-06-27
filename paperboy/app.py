@@ -41,6 +41,7 @@ _BOOKMARKS_LIST = "bookmark-list"
 class ResearchFeedApp(App[None]):
     """Paperboy — terminal reader for academic papers."""
 
+    TITLE = "paperboy"
     CSS_PATH = Path(__file__).parent / "paperboy.tcss"
 
     BINDINGS = [
