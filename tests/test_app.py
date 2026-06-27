@@ -59,7 +59,7 @@ async def test_papers_load_on_mount(tmp_path: Path) -> None:
     app = _make_app(papers, tmp_path)
     async with app.run_test() as pilot:
         await pilot.pause(0.5)
-        pl = app.query_one(PaperList)
+        pl = app.query_one("#feed-list", PaperList)
         assert len(pl._all_papers) == 3
 
 
@@ -73,7 +73,7 @@ async def test_filter_by_source(tmp_path: Path) -> None:
     app = _make_app(papers, tmp_path)
     async with app.run_test() as pilot:
         await pilot.pause(0.5)
-        pl = app.query_one(PaperList)
+        pl = app.query_one("#feed-list", PaperList)
         pl.active_filter = "arXiv"
         await pilot.pause(0.1)
         assert all(p.source == "arXiv" for p in pl._visible_papers)
@@ -88,7 +88,7 @@ async def test_open_paper_marks_read(tmp_path: Path) -> None:
         await pilot.pause(0.5)
         await pilot.press("enter")
         await pilot.pause(0.3)
-        pl = app.query_one(PaperList)
+        pl = app.query_one("#feed-list", PaperList)
         assert pl._all_papers[0].is_read is True
 
 
@@ -110,7 +110,7 @@ async def test_unread_count_updates(tmp_path: Path) -> None:
     app = _make_app(papers, tmp_path)
     async with app.run_test() as pilot:
         await pilot.pause(0.5)
-        pl = app.query_one(PaperList)
+        pl = app.query_one("#feed-list", PaperList)
         assert pl.unread_count == 2
         await pilot.press("enter")
         await pilot.pause(0.3)

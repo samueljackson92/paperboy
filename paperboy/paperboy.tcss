@@ -54,6 +54,48 @@ Footer > .footer--highlight {
     border-bottom: tall $surface;
 }
 
+/* ── Tabs ────────────────────────────────────── */
+TabbedContent {
+    height: 1fr;
+    background: $bg;
+}
+
+TabbedContent > TabPane {
+    padding: 0;
+    height: 1fr;
+    background: $bg;
+}
+
+Tabs {
+    background: $bg-alt;
+    border-bottom: tall $surface;
+}
+
+Tabs > Tab {
+    background: $bg-alt;
+    color: $comment;
+    padding: 0 2;
+}
+
+Tabs > Tab:focus {
+    color: $fg;
+}
+
+Tabs > Tab.-active {
+    background: $bg;
+    color: $cyan;
+    text-style: bold;
+}
+
+Tabs > Tab:hover {
+    background: $surface;
+    color: $fg-sub;
+}
+
+Tabs > .tabs--transparent-underline {
+    color: $surface;
+}
+
 /* ── Paper list ──────────────────────────────── */
 PaperList {
     height: 1fr;

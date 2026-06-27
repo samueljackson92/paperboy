@@ -9,7 +9,15 @@ from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.reactive import reactive
-from textual.widgets import DataTable, Footer, Header, LoadingIndicator, Static
+from textual.widgets import (
+    DataTable,
+    Footer,
+    Header,
+    LoadingIndicator,
+    Static,
+    TabbedContent,
+    TabPane,
+)
 
 from paperboy.config import Config, load_config
 from paperboy.models import Paper
@@ -23,6 +31,11 @@ from paperboy.widgets.filter_panel import FilterPanel
 from paperboy.widgets.paper_list import PaperList
 
 logger = logging.getLogger(__name__)
+
+_FEED_TAB = "tab-feed"
+_BOOKMARKS_TAB = "tab-bookmarks"
+_FEED_LIST = "feed-list"
+_BOOKMARKS_LIST = "bookmark-list"
 
 
 class ResearchFeedApp(App[None]):
@@ -47,6 +60,7 @@ class ResearchFeedApp(App[None]):
         self._config = config or load_config()
         self._store = ReadStateStore()
         self._sources = self._build_registry()
+        self._all_papers: list[Paper] = []
 
     def _build_registry(self) -> SourceRegistry:
         cfg = self._config
@@ -70,7 +84,11 @@ class ResearchFeedApp(App[None]):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         yield Static("", id="status-bar")
-        yield PaperList(id="paper-list")
+        with TabbedContent(id="main-tabs"):
+            with TabPane("Feed", id=_FEED_TAB):
+                yield PaperList(id=_FEED_LIST)
+            with TabPane("Bookmarks ★", id=_BOOKMARKS_TAB):
+                yield PaperList(id=_BOOKMARKS_LIST)
         yield LoadingIndicator(id="loading")
         yield DetailView(id="detail-view")
         yield Footer()
@@ -81,10 +99,23 @@ class ResearchFeedApp(App[None]):
 
     def watch_loading(self, value: bool) -> None:
         self.query_one("#loading", LoadingIndicator).display = value
-        self.query_one("#paper-list", PaperList).display = not value
+        self.query_one("#main-tabs", TabbedContent).display = not value
+
+    def _active_list(self) -> PaperList:
+        tabs = self.query_one("#main-tabs", TabbedContent)
+        active = tabs.active
+        list_id = _BOOKMARKS_LIST if active == _BOOKMARKS_TAB else _FEED_LIST
+        return self.query_one(f"#{list_id}", PaperList)
+
+    def _apply_paper_update(self, updated: Paper) -> None:
+        self._all_papers = [updated if p.id == updated.id else p for p in self._all_papers]
+        self.query_one(f"#{_FEED_LIST}", PaperList).update_paper(updated)
+        bm_list = self.query_one(f"#{_BOOKMARKS_LIST}", PaperList)
+        bookmarked = [p for p in self._all_papers if p.is_bookmarked]
+        bm_list.set_papers(bookmarked)
 
     def _update_status(self) -> None:
-        pl = self.query_one("#paper-list", PaperList)
+        pl = self.query_one(f"#{_FEED_LIST}", PaperList)
         f = pl.current_filter
         parts = [f"Unread: [bold]{pl.unread_count}[/bold]"]
         if pl.bookmark_count:
@@ -108,16 +139,19 @@ class ResearchFeedApp(App[None]):
             papers = await self._sources.fetch_all(limit=self._config.app.max_papers)
             read_ids = self._store.get_all_read_ids()
             bookmarked_ids = self._store.get_all_bookmarked_ids()
-            papers = [
+            self._all_papers = [
                 p.model_copy(update={
                     "is_read": p.id in read_ids,
                     "is_bookmarked": p.id in bookmarked_ids,
                 })
                 for p in papers
             ]
-            pl = self.query_one("#paper-list", PaperList)
-            pl.set_papers(papers)
+            feed_list = self.query_one(f"#{_FEED_LIST}", PaperList)
+            feed_list.set_papers(self._all_papers)
+            bookmarked = [p for p in self._all_papers if p.is_bookmarked]
+            self.query_one(f"#{_BOOKMARKS_LIST}", PaperList).set_papers(bookmarked)
             self.last_refresh = datetime.now(tz=timezone.utc).strftime("%H:%M:%S UTC")
+            feed_list.query_one(DataTable).focus()
         except Exception as exc:
             logger.error("Refresh failed: %s", exc)
             self.notify(f"Refresh error: {exc}", severity="error")
@@ -126,7 +160,7 @@ class ResearchFeedApp(App[None]):
         self._update_status()
 
     def action_filter(self) -> None:
-        pl = self.query_one("#paper-list", PaperList)
+        pl = self._active_list()
 
         def handle_filter(result: object) -> None:
             from paperboy.widgets.filter_panel import FilterState
@@ -143,19 +177,30 @@ class ResearchFeedApp(App[None]):
         self.query_one("#detail-view", DetailView).open_pdf()
 
     def action_move_down(self) -> None:
-        self.query_one("#paper-list", PaperList).query_one(DataTable).action_scroll_down()
+        self._active_list().query_one(DataTable).action_scroll_down()
 
     def action_move_up(self) -> None:
-        self.query_one("#paper-list", PaperList).query_one(DataTable).action_scroll_up()
+        self._active_list().query_one(DataTable).action_scroll_up()
 
     def on_paper_list_paper_highlighted(self, event: PaperList.PaperHighlighted) -> None:
-        self.query_one("#detail-view", DetailView).show_paper(event.paper)
+        tabs = self.query_one("#main-tabs", TabbedContent)
+        expected = _BOOKMARKS_LIST if tabs.active == _BOOKMARKS_TAB else _FEED_LIST
+        if event.sender_id == expected or event.sender_id == "":
+            self.query_one("#detail-view", DetailView).show_paper(event.paper)
+
+    def on_tabbed_content_tab_activated(self, event: TabbedContent.TabActivated) -> None:
+        active_list = self._active_list()
+        table = active_list.query_one(DataTable)
+        if table.cursor_row < len(active_list._visible_papers):
+            paper = active_list._visible_papers[table.cursor_row]
+            self.query_one("#detail-view", DetailView).show_paper(paper)
+        self._update_status()
 
     def on_paper_list_paper_selected(self, event: PaperList.PaperSelected) -> None:
         paper = event.paper
         updated = paper.with_read_state(True)
         self._store.mark_read(paper.id)
-        self.query_one("#paper-list", PaperList).update_paper(updated)
+        self._apply_paper_update(updated)
         self._update_status()
 
     def on_paper_list_paper_toggled(self, event: PaperList.PaperToggled) -> None:
@@ -165,14 +210,14 @@ class ResearchFeedApp(App[None]):
             self._store.mark_read(paper.id)
         else:
             self._store.mark_unread(paper.id)
-        self.query_one("#paper-list", PaperList).update_paper(paper.with_read_state(new_read))
+        self._apply_paper_update(paper.with_read_state(new_read))
         self._update_status()
 
     def on_paper_list_paper_bookmarked(self, event: PaperList.PaperBookmarked) -> None:
         paper = event.paper
         new_state = self._store.toggle_bookmark(paper.id)
         updated = paper.with_bookmark_state(new_state)
-        self.query_one("#paper-list", PaperList).update_paper(updated)
+        self._apply_paper_update(updated)
         label = "Bookmarked ★" if new_state else "Bookmark removed"
         self.notify(label, timeout=1.5)
         self._update_status()

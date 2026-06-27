@@ -36,9 +36,10 @@ class PaperList(Widget):
             self.paper = paper
 
     class PaperHighlighted(Message):
-        def __init__(self, paper: Paper) -> None:
+        def __init__(self, paper: Paper, sender_id: str = "") -> None:
             super().__init__()
             self.paper = paper
+            self.sender_id = sender_id
 
     class PaperBookmarked(Message):
         def __init__(self, paper: Paper) -> None:
@@ -112,7 +113,7 @@ class PaperList(Widget):
             )
 
         if self._visible_papers:
-            self.post_message(self.PaperHighlighted(self._visible_papers[0]))
+            self.post_message(self.PaperHighlighted(self._visible_papers[0], sender_id=self.id or ""))
 
     def action_select_paper(self) -> None:
         table = self.query_one(DataTable)
@@ -135,7 +136,7 @@ class PaperList(Widget):
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         if event.cursor_row < len(self._visible_papers):
-            self.post_message(self.PaperHighlighted(self._visible_papers[event.cursor_row]))
+            self.post_message(self.PaperHighlighted(self._visible_papers[event.cursor_row], sender_id=self.id or ""))
 
     def update_paper(self, updated: Paper) -> None:
         self._all_papers = [updated if p.id == updated.id else p for p in self._all_papers]
