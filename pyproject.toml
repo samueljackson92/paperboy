@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "paperboy"
+version = "0.1.0"
+description = "A terminal RSS-style reader for arXiv, OpenReview, and journals"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+dependencies = [
+    "textual>=0.47.0",
+    "httpx>=0.26.0",
+    "feedparser>=6.0.11",
+    "openreview-py>=1.14.0",
+    "aiosqlite>=0.19.0",
+    "rich>=13.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "textual[dev]>=0.47.0",
+    "mypy>=1.8.0",
+    "ruff>=0.2.0",
+    "respx>=0.20.0",
+]
+
+[project.scripts]
+paperboy = "research_feed.app:main"
+research-feed = "research_feed.app:main"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
