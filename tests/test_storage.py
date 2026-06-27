@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from research_feed.storage import ReadStateStore
+from paperboy.storage import ReadStateStore
 
 
 @pytest.fixture

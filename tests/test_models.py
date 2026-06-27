@@ -4,8 +4,9 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import pytest
+from pydantic import ValidationError
 
-from research_feed.models import Paper, SourceKind
+from paperboy.models import Paper, SourceKind
 
 
 def _make_paper(**kwargs: object) -> Paper:
@@ -32,7 +33,7 @@ def test_paper_construction() -> None:
 
 def test_paper_frozen() -> None:
     p = _make_paper()
-    with pytest.raises((AttributeError, TypeError)):
+    with pytest.raises((ValidationError, AttributeError, TypeError)):
         p.title = "Changed"  # type: ignore[misc]
 
 

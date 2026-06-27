@@ -4,8 +4,8 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from research_feed.models import SourceKind
-from research_feed.sources.journal_source import JournalSource
+from paperboy.models import SourceKind
+from paperboy.sources.journal_source import JournalSource
 
 RSS_FEED = """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -40,23 +40,31 @@ ATOM_FEED = """\
     <title>Atom Feed Article</title>
     <summary>An article from an Atom feed.</summary>
     <published>2024-01-15T00:00:00Z</published>
-    <author><name>Eve Davis</name></author>
   </entry>
 </feed>
 """
 
 
-def _src(body: str, name: str = "Nuclear Fusion", status: int = 200) -> JournalSource:
+def _src(
+    body: str,
+    name: str = "Nuclear Fusion",
+    status: int = 200,
+    keywords: list[str] | None = None,
+) -> JournalSource:
     transport = httpx.MockTransport(lambda req: httpx.Response(status, text=body))
     client = httpx.AsyncClient(transport=transport)
-    return JournalSource(name=name, feed_url="https://example.com/rss", client=client)
+    return JournalSource(
+        name=name,
+        feed_url="https://example.com/rss",
+        keywords=keywords,
+        client=client,
+    )
 
 
 @pytest.mark.asyncio
 async def test_fetch_rss_parses_items() -> None:
     src = _src(RSS_FEED)
     papers = await src.fetch_latest(limit=10)
-
     assert len(papers) == 2
     assert papers[0].title == "Plasma confinement study"
     assert papers[0].kind == SourceKind.JOURNAL
@@ -69,10 +77,32 @@ async def test_fetch_rss_parses_items() -> None:
 async def test_fetch_atom_parses_entries() -> None:
     src = _src(ATOM_FEED, name="Test Journal")
     papers = await src.fetch_latest(limit=10)
-
     assert len(papers) == 1
     assert papers[0].title == "Atom Feed Article"
     assert papers[0].abstract == "An article from an Atom feed."
+
+
+@pytest.mark.asyncio
+async def test_keyword_filter_matches() -> None:
+    src = _src(RSS_FEED, keywords=["tokamak"])
+    papers = await src.fetch_latest(limit=10)
+    # Only the first item mentions tokamak
+    assert len(papers) == 1
+    assert "tokamak" in papers[0].abstract.lower()
+
+
+@pytest.mark.asyncio
+async def test_keyword_filter_none_match() -> None:
+    src = _src(RSS_FEED, keywords=["quantum computing"])
+    papers = await src.fetch_latest(limit=10)
+    assert papers == []
+
+
+@pytest.mark.asyncio
+async def test_no_keywords_returns_all() -> None:
+    src = _src(RSS_FEED, keywords=[])
+    papers = await src.fetch_latest(limit=10)
+    assert len(papers) == 2
 
 
 @pytest.mark.asyncio

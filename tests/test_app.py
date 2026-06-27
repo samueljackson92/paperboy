@@ -8,12 +8,11 @@ from unittest.mock import patch
 
 import pytest
 
-from research_feed.app import ResearchFeedApp
-from research_feed.config import Config
-from research_feed.models import Paper, SourceKind
-from research_feed.sources.registry import SourceRegistry
-from research_feed.storage import ReadStateStore
-from research_feed.widgets.paper_list import PaperList
+from paperboy.app import ResearchFeedApp
+from paperboy.config import Config
+from paperboy.models import Paper, SourceKind
+from paperboy.storage import ReadStateStore
+from paperboy.widgets.paper_list import PaperList
 
 
 def _paper(

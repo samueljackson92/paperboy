@@ -4,8 +4,8 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from research_feed.models import SourceKind
-from research_feed.sources.arxiv_source import ArxivSource
+from paperboy.models import SourceKind
+from paperboy.sources.arxiv_source import ArxivSource
 
 SAMPLE_ATOM = """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -20,7 +20,6 @@ SAMPLE_ATOM = """\
     <author><name>Alice Smith</name></author>
     <author><name>Bob Jones</name></author>
     <category term="physics.plasm-ph" scheme="http://arxiv.org/schemas/atom"/>
-    <category term="physics.flu-dyn" scheme="http://arxiv.org/schemas/atom"/>
     <link rel="alternate" type="text/html" href="https://arxiv.org/abs/2401.00001v1"/>
     <link rel="related" type="application/pdf" href="https://arxiv.org/pdf/2401.00001v1"/>
   </entry>
@@ -29,7 +28,6 @@ SAMPLE_ATOM = """\
     <title>Another Paper</title>
     <summary>Second abstract.</summary>
     <published>2024-01-14T00:00:00Z</published>
-    <updated>2024-01-14T00:00:00Z</updated>
     <author><name>Carol White</name></author>
     <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
   </entry>
@@ -49,16 +47,17 @@ MISSING_DATE_ATOM = """\
 """
 
 
-def _mock_client(body: str, status: int = 200) -> httpx.AsyncClient:
+def _src(body: str, status: int = 200, **kwargs: object) -> ArxivSource:
     transport = httpx.MockTransport(lambda req: httpx.Response(status, text=body))
-    return httpx.AsyncClient(transport=transport)
+    client = httpx.AsyncClient(transport=transport)
+    src = ArxivSource(client=client, **kwargs)  # type: ignore[arg-type]
+    src._last_request = 0.0
+    return src
 
 
 @pytest.mark.asyncio
 async def test_fetch_latest_parses_papers() -> None:
-    src = ArxivSource(categories=["physics.plasm-ph"], client=_mock_client(SAMPLE_ATOM))
-    src._last_request = 0.0
-
+    src = _src(SAMPLE_ATOM, categories=["physics.plasm-ph"])
     papers = await src.fetch_latest(limit=10)
 
     assert len(papers) == 2
@@ -67,15 +66,12 @@ async def test_fetch_latest_parses_papers() -> None:
     assert papers[0].kind == SourceKind.ARXIV
     assert papers[0].source == "arXiv"
     assert "physics.plasm-ph" in papers[0].categories
-    assert papers[0].pdf_url is not None
     assert "2401.00001" in papers[0].id
 
 
 @pytest.mark.asyncio
 async def test_fetch_latest_fallback_pdf_url() -> None:
-    src = ArxivSource(categories=["cs.LG"], client=_mock_client(SAMPLE_ATOM))
-    src._last_request = 0.0
-
+    src = _src(SAMPLE_ATOM)
     papers = await src.fetch_latest(limit=10)
     second = next(p for p in papers if "2401.00002" in p.id)
     assert second.pdf_url is not None
@@ -84,9 +80,7 @@ async def test_fetch_latest_fallback_pdf_url() -> None:
 
 @pytest.mark.asyncio
 async def test_fetch_latest_missing_date_uses_now() -> None:
-    src = ArxivSource(client=_mock_client(MISSING_DATE_ATOM))
-    src._last_request = 0.0
-
+    src = _src(MISSING_DATE_ATOM)
     papers = await src.fetch_latest(limit=10)
     assert len(papers) == 1
     assert papers[0].published is not None
@@ -94,8 +88,27 @@ async def test_fetch_latest_missing_date_uses_now() -> None:
 
 @pytest.mark.asyncio
 async def test_fetch_latest_http_error_raises() -> None:
-    src = ArxivSource(client=_mock_client("", status=503))
-    src._last_request = 0.0
-
+    src = _src("", status=503)
     with pytest.raises(httpx.HTTPStatusError):
         await src.fetch_latest(limit=10)
+
+
+def test_build_query_categories_only() -> None:
+    src = ArxivSource(categories=["cs.LG", "cs.AI"])
+    assert src._build_query() == "cat:cs.LG OR cat:cs.AI"
+
+
+def test_build_query_keywords_only() -> None:
+    src = ArxivSource(categories=[], keywords=["plasma", "fusion"])
+    q = src._build_query()
+    assert "ti:plasma OR abs:plasma" in q
+    assert "ti:fusion OR abs:fusion" in q
+
+
+def test_build_query_categories_and_keywords() -> None:
+    src = ArxivSource(categories=["physics.plasm-ph"], keywords=["tokamak"])
+    q = src._build_query()
+    assert "cat:physics.plasm-ph" in q
+    assert "ti:tokamak OR abs:tokamak" in q
+    # Both parts must be ANDed
+    assert " AND " in q

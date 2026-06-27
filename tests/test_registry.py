@@ -5,9 +5,9 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from research_feed.models import Paper, SourceKind
-from research_feed.sources.base import PaperSource
-from research_feed.sources.registry import SourceRegistry
+from paperboy.models import Paper, SourceKind
+from paperboy.sources.base import PaperSource
+from paperboy.sources.registry import SourceRegistry
 
 
 def _paper(title: str, days_ago: int) -> Paper:
@@ -45,7 +45,6 @@ async def test_fetch_all_merges_and_sorts() -> None:
     src_a = MockSource([_paper("Old Paper", 2), _paper("Newest", 0)])
     src_b = MockSource([_paper("Middle", 1)])
     papers = await SourceRegistry([src_a, src_b]).fetch_all()
-
     assert len(papers) == 3
     assert papers[0].title == "Newest"
     assert papers[1].title == "Middle"
@@ -59,7 +58,6 @@ async def test_fetch_all_isolates_source_error() -> None:
         MockSource([good]),
         MockSource(error=RuntimeError("network error")),
     ]).fetch_all()
-
     assert len(papers) == 1
     assert papers[0].title == "Good Paper"
 
