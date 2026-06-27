@@ -1,114 +1,115 @@
-/* Paperboy TUI — Catppuccin Mocha color scheme */
-/* https://github.com/catppuccin/catppuccin */
+/* Paperboy TUI — Monokai color scheme */
 
-$base:     #1e1e2e;
-$mantle:   #181825;
-$crust:    #11111b;
-$surface0: #313244;
-$surface1: #45475a;
-$overlay0: #6c7086;
-$overlay1: #7f849c;
-$subtext0: #a6adc8;
-$subtext1: #bac2de;
-$text:     #cdd6f4;
-$lavender: #b4befe;
-$blue:     #89b4fa;
-$sapphire: #74c7ec;
+$bg:       #272822;
+$bg-alt:   #1e1f1c;
+$bg-deep:  #1a1b16;
+$surface:  #3e3d32;
+$surface1: #49483e;
+$comment:  #75715e;
+$fg-muted: #90907a;
+$fg-sub:   #cfcfc2;
+$fg:       #f8f8f2;
+$yellow:   #e6db74;
+$orange:   #fd971f;
+$red:      #f92672;
+$green:    #a6e22e;
+$cyan:     #66d9e8;
+$purple:   #ae81ff;
 
 /* ── App shell ───────────────────────────────── */
 App {
-    background: $base;
-    color: $text;
+    background: $bg;
+    color: $fg;
 }
 
 Header {
-    background: $mantle;
-    color: $lavender;
+    background: $bg-alt;
+    color: $purple;
     text-style: bold;
     height: 1;
 }
 
 Footer {
-    background: $mantle;
-    color: $overlay1;
+    background: $bg-alt;
+    color: $comment;
     height: 1;
 }
 
 Footer > .footer--key {
-    background: $surface0;
-    color: $blue;
+    background: $surface;
+    color: $cyan;
 }
 
 Footer > .footer--highlight {
     background: $surface1;
-    color: $text;
+    color: $fg;
 }
 
 /* ── Status bar ──────────────────────────────── */
 #status-bar {
-    background: $crust;
-    color: $subtext0;
+    background: $bg-deep;
+    color: $fg-muted;
     height: 1;
     padding: 0 1;
-    border-bottom: tall $surface0;
+    border-bottom: tall $surface;
 }
 
 /* ── Paper list ──────────────────────────────── */
 PaperList {
     height: 1fr;
-    background: $base;
+    background: $bg;
 }
 
 DataTable {
-    background: $base;
-    color: $text;
+    background: $bg;
+    color: $fg;
     height: 1fr;
 }
 
 DataTable > .datatable--header {
-    background: $surface0;
-    color: $lavender;
+    background: $surface;
+    color: $yellow;
     text-style: bold;
 }
 
 DataTable > .datatable--header-hover {
     background: $surface1;
-    color: $lavender;
+    color: $yellow;
 }
 
 DataTable > .datatable--cursor {
     background: $surface1;
-    color: $text;
+    color: $fg;
     text-style: bold;
 }
 
 DataTable > .datatable--hover {
-    background: $surface0;
+    background: $surface;
 }
 
 DataTable > .datatable--odd-row {
-    background: $mantle;
+    background: $bg-alt;
 }
 
 DataTable > .datatable--even-row {
-    background: $base;
+    background: $bg;
 }
 
 /* ── Loading ─────────────────────────────────── */
 LoadingIndicator {
-    background: $base;
-    color: $blue;
+    background: $bg;
+    color: $cyan;
 }
 
 /* ── Detail modal ────────────────────────────── */
 DetailView {
     align: center middle;
-    background: $base 70%;
+    background: $bg 70%;
 }
 
 #detail-container {
-    background: $mantle;
-    border: round $lavender;
+    background: $bg-alt;
+    border: round $purple;
     width: 80%;
     height: 85%;
     padding: 0;
@@ -116,25 +117,25 @@ DetailView {
 }
 
 #detail-title {
-    color: $lavender;
+    color: $green;
     text-style: bold;
     padding: 1 2 0 2;
 }
 
 #detail-authors {
-    color: $subtext1;
+    color: $fg-sub;
     padding: 0 2;
 }
 
 #detail-meta {
-    color: $overlay0;
+    color: $comment;
     padding: 0 2 1 2;
-    border-bottom: tall $surface0;
+    border-bottom: tall $surface;
 }
 
 #detail-markdown {
-    background: $mantle;
-    color: $text;
+    background: $bg-alt;
+    color: $fg;
     height: 1fr;
     padding: 1 2;
     overflow-y: auto;
@@ -144,61 +145,61 @@ DetailView {
     height: 3;
     align: right middle;
     padding: 0 2;
-    border-top: tall $surface0;
+    border-top: tall $surface;
 }
 
 #close-btn {
     width: auto;
     min-width: 10;
-    background: $surface0;
-    color: $subtext1;
+    background: $surface;
+    color: $fg-sub;
     border: tall $surface1;
     margin-left: 1;
 }
 
 #close-btn:hover {
     background: $surface1;
-    color: $text;
-}
-
-#pdf-btn {
-    width: auto;
-    min-width: 12;
-    background: $blue;
-    color: $crust;
-    border: tall $sapphire;
-    text-style: bold;
-    margin-left: 1;
-}
-
-#pdf-btn:hover {
-    background: $sapphire;
-    color: $crust;
+    color: $fg;
 }
 
 #view-pdf-btn {
     width: auto;
     min-width: 12;
     background: $surface1;
-    color: $text;
-    border: tall $overlay0;
+    color: $orange;
+    border: tall $comment;
     margin-left: 1;
 }
 
 #view-pdf-btn:hover {
-    background: $overlay0;
-    color: $text;
+    background: $comment;
+    color: $fg;
+}
+
+#pdf-btn {
+    width: auto;
+    min-width: 12;
+    background: $cyan;
+    color: $bg-deep;
+    border: tall $cyan;
+    text-style: bold;
+    margin-left: 1;
+}
+
+#pdf-btn:hover {
+    background: $green;
+    color: $bg-deep;
 }
 
 /* ── PDF reader modal ────────────────────────── */
 PDFView {
     align: center middle;
-    background: $base 70%;
+    background: $bg 70%;
 }
 
 #pdf-container {
-    background: $mantle;
-    border: round $blue;
+    background: $bg-alt;
+    border: round $cyan;
     width: 85%;
     height: 92%;
     overflow: hidden;
@@ -206,26 +207,26 @@ PDFView {
 }
 
 #pdf-title {
-    color: $lavender;
+    color: $green;
     text-style: bold;
     padding: 1 2 0 2;
 }
 
 #pdf-authors {
-    color: $subtext1;
+    color: $fg-sub;
     padding: 0 2 1 2;
-    border-bottom: tall $surface0;
+    border-bottom: tall $surface;
 }
 
 #pdf-loading {
     height: 1fr;
-    color: $blue;
+    color: $cyan;
 }
 
 #pdf-body {
     height: 1fr;
-    background: $mantle;
-    color: $text;
+    background: $bg-alt;
+    color: $fg;
     padding: 1 2;
     overflow-y: auto;
 }
@@ -234,40 +235,40 @@ PDFView {
     height: 3;
     align: right middle;
     padding: 0 2;
-    border-top: tall $surface0;
+    border-top: tall $surface;
 }
 
 #pdf-close-btn {
     width: auto;
     min-width: 10;
-    background: $surface0;
-    color: $subtext1;
+    background: $surface;
+    color: $fg-sub;
     border: tall $surface1;
 }
 
 #pdf-close-btn:hover {
     background: $surface1;
-    color: $text;
+    color: $fg;
 }
 
 /* ── Filter modal ────────────────────────────── */
 FilterPanel {
     align: center middle;
-    background: $base 70%;
+    background: $bg 70%;
 }
 
 #filter-title {
-    background: $surface0;
-    color: $lavender;
+    background: $surface;
+    color: $yellow;
     text-style: bold;
     padding: 0 2;
     width: 40;
 }
 
 OptionList {
-    background: $mantle;
-    border: round $lavender;
-    color: $text;
+    background: $bg-alt;
+    border: round $purple;
+    color: $fg;
     width: 40;
     height: auto;
     max-height: 20;
@@ -275,16 +276,16 @@ OptionList {
 
 OptionList > .option-list--option-highlighted {
     background: $surface1;
-    color: $text;
+    color: $fg;
     text-style: bold;
 }
 
 OptionList > .option-list--option {
     padding: 0 2;
-    color: $subtext1;
+    color: $fg-sub;
 }
 
 OptionList > .option-list--option:hover {
-    background: $surface0;
-    color: $text;
+    background: $surface;
+    color: $fg;
 }
