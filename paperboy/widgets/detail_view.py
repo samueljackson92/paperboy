@@ -4,9 +4,8 @@ from __future__ import annotations
 import webbrowser
 
 from textual.app import ComposeResult
-from textual.containers import Horizontal
 from textual.widget import Widget
-from textual.widgets import Button, Markdown, Static
+from textual.widgets import Markdown, Static
 
 from paperboy.models import Paper
 
@@ -23,11 +22,6 @@ class DetailView(Widget):
         yield Static("", id="detail-authors")
         yield Static("", id="detail-meta")
         yield Markdown("", id="detail-markdown")
-        with Horizontal(id="detail-actions"):
-            yield Button("Open PDF", id="pdf-btn", variant="primary")
-
-    def on_mount(self) -> None:
-        self.query_one("#detail-actions").display = False
 
     def show_paper(self, paper: Paper) -> None:
         authors_str = ", ".join(paper.authors) if paper.authors else "Unknown"
@@ -44,14 +38,8 @@ class DetailView(Widget):
         self.query_one("#detail-markdown", Markdown).update(
             paper.abstract or "_No abstract available._"
         )
-
         self._current_pdf_url = paper.pdf_url
-        self.query_one("#detail-actions").display = bool(paper.pdf_url)
 
     def open_pdf(self) -> None:
         if self._current_pdf_url:
             webbrowser.open(self._current_pdf_url)
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "pdf-btn":
-            self.open_pdf()

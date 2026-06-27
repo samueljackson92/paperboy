@@ -132,27 +132,6 @@ DetailView {
     overflow-y: auto;
 }
 
-#detail-actions {
-    height: 3;
-    align: right middle;
-    padding: 0 2;
-    border-top: tall $surface;
-}
-
-#pdf-btn {
-    width: auto;
-    min-width: 12;
-    background: $cyan;
-    color: $bg-deep;
-    border: tall $cyan;
-    text-style: bold;
-    margin-left: 1;
-}
-
-#pdf-btn:hover {
-    background: $green;
-    color: $bg-deep;
-}
 
 /* ── Filter modal ────────────────────────────── */
 FilterPanel {
