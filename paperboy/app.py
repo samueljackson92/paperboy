@@ -20,15 +20,19 @@ from textual.widgets import (
 )
 
 from paperboy.config import Config, load_config
-from paperboy.models import Paper
+from paperboy.export import paper_to_bibtex
+from paperboy.models import FilterState, Paper
 from paperboy.sources.arxiv_source import ArxivSource
 from paperboy.sources.journal_source import JournalSource
 from paperboy.sources.openreview_source import OpenReviewSource
 from paperboy.sources.registry import SourceRegistry
+from paperboy.sources.semantic_scholar import SemanticScholarEnricher
 from paperboy.storage import ReadStateStore
 from paperboy.widgets.detail_view import DetailView
-from paperboy.widgets.filter_panel import FilterPanel
+from paperboy.widgets.export_panel import ExportPanel
+from paperboy.widgets.filter_panel import FilterPanel, SavedFilterResult
 from paperboy.widgets.paper_list import PaperList
+from paperboy.widgets.saved_search_panel import SavedSearchPanel
 
 logger = logging.getLogger(__name__)
 
@@ -48,7 +52,10 @@ class ResearchFeedApp(App[None]):
         Binding("q", "quit", "Quit", show=True),
         Binding("r", "refresh", "Refresh", show=True),
         Binding("f", "filter", "Filter", show=True),
+        Binding("e", "export", "Export", show=True),
+        Binding("S", "saved_searches", "Searches", show=True),
         Binding("o", "open_pdf", "Open PDF", show=True),
+        Binding("y", "copy_bibtex", "Copy BibTeX", show=False),
         Binding("j", "move_down", "Down", show=False),
         Binding("k", "move_up", "Up", show=False),
     ]
@@ -62,6 +69,7 @@ class ResearchFeedApp(App[None]):
         self._store = ReadStateStore()
         self._sources = self._build_registry()
         self._all_papers: list[Paper] = []
+        self._enricher: SemanticScholarEnricher | None = None
 
     def _build_registry(self) -> SourceRegistry:
         cfg = self._config
@@ -97,6 +105,9 @@ class ResearchFeedApp(App[None]):
     def on_mount(self) -> None:
         self.query_one("#loading", LoadingIndicator).display = False
         self.action_refresh()
+        interval = self._config.app.refresh_interval_minutes * 60
+        if interval > 0:
+            self.set_interval(interval, self.action_refresh)
 
     def watch_loading(self, value: bool) -> None:
         self.query_one("#loading", LoadingIndicator).display = value
@@ -111,9 +122,8 @@ class ResearchFeedApp(App[None]):
     def _apply_paper_update(self, updated: Paper) -> None:
         self._all_papers = [updated if p.id == updated.id else p for p in self._all_papers]
         self.query_one(f"#{_FEED_LIST}", PaperList).update_paper(updated)
-        bm_list = self.query_one(f"#{_BOOKMARKS_LIST}", PaperList)
         bookmarked = [p for p in self._all_papers if p.is_bookmarked]
-        bm_list.set_papers(bookmarked)
+        self.query_one(f"#{_BOOKMARKS_LIST}", PaperList).set_papers(bookmarked)
 
     def _update_status(self) -> None:
         pl = self.query_one(f"#{_FEED_LIST}", PaperList)
@@ -147,6 +157,12 @@ class ResearchFeedApp(App[None]):
                 })
                 for p in papers
             ]
+
+            if self._config.semantic_scholar.api_key:
+                if self._enricher is None:
+                    self._enricher = SemanticScholarEnricher(self._config.semantic_scholar.api_key)
+                self._all_papers = await self._enricher.enrich_citations(self._all_papers)
+
             feed_list = self.query_one(f"#{_FEED_LIST}", PaperList)
             feed_list.set_papers(self._all_papers)
             bookmarked = [p for p in self._all_papers if p.is_bookmarked]
@@ -164,8 +180,12 @@ class ResearchFeedApp(App[None]):
         pl = self._active_list()
 
         def handle_filter(result: object) -> None:
-            from paperboy.widgets.filter_panel import FilterState
-            if isinstance(result, FilterState):
+            if isinstance(result, SavedFilterResult):
+                self._store.save_search(result.name, result.state)
+                pl.apply_filters(result.state)
+                self.notify(f'Search "{result.name}" saved', timeout=1.5)
+                self._update_status()
+            elif isinstance(result, FilterState):
                 pl.apply_filters(result)
                 self._update_status()
 
@@ -174,8 +194,34 @@ class ResearchFeedApp(App[None]):
             handle_filter,
         )
 
+    def action_export(self) -> None:
+        self.push_screen(ExportPanel(self._active_list()._visible_papers))
+
+    def action_saved_searches(self) -> None:
+        pl = self._active_list()
+
+        def handle_result(state: FilterState | None) -> None:
+            if isinstance(state, FilterState):
+                pl.apply_filters(state)
+                self._update_status()
+
+        self.push_screen(SavedSearchPanel(self._store, pl.current_filter), handle_result)
+
     def action_open_pdf(self) -> None:
         self.query_one("#detail-view", DetailView).open_pdf()
+
+    def action_copy_bibtex(self) -> None:
+        detail = self.query_one("#detail-view", DetailView)
+        paper = detail._current_paper
+        if paper is None:
+            return
+        bib = paper_to_bibtex(paper)
+        try:
+            self.copy_to_clipboard(bib)
+            self.notify("BibTeX copied", timeout=1.5)
+        except Exception:
+            self.notify("Clipboard unavailable — BibTeX logged", severity="warning", timeout=2)
+            logger.info("BibTeX:\n%s", bib)
 
     def action_move_down(self) -> None:
         self._active_list().query_one(DataTable).action_scroll_down()

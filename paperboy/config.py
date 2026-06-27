@@ -41,6 +41,10 @@ class AppConfig(BaseModel):
     max_papers: int = 200
 
 
+class SemanticScholarConfig(BaseModel):
+    api_key: str = ""
+
+
 class Config(BaseModel):
     arxiv: ArxivConfig = ArxivConfig()
     openreview: OpenReviewConfig = OpenReviewConfig()
@@ -55,6 +59,7 @@ class Config(BaseModel):
         ),
     ]
     app: AppConfig = AppConfig()
+    semantic_scholar: SemanticScholarConfig = SemanticScholarConfig()
 
 
 def load_config(path: Path | None = None) -> Config:

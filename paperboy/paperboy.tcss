@@ -276,3 +276,194 @@ FilterPanel {
     background: $green;
     color: $bg-deep;
 }
+
+#filter-save {
+    width: auto;
+    min-width: 8;
+    background: $surface;
+    color: $fg-sub;
+    border: tall $surface1;
+    margin-left: 1;
+}
+
+#filter-save:hover {
+    background: $surface1;
+    color: $fg;
+}
+
+#filter-sort {
+    background: $surface;
+    border: tall $surface1;
+    color: $fg;
+    width: 1fr;
+}
+
+#filter-sort:focus {
+    border: tall $cyan;
+}
+
+#save-name {
+    background: $surface;
+    border: tall $cyan;
+    color: $fg;
+    width: 1fr;
+    margin-top: 1;
+}
+
+/* ── Vim search bar ──────────────────────────── */
+#vim-search {
+    height: 1;
+    background: $surface;
+    border: none;
+    color: $cyan;
+    padding: 0 1;
+}
+
+#vim-search:focus {
+    border: none;
+    background: $surface1;
+}
+
+/* ── Related papers ──────────────────────────── */
+#related-list {
+    color: $fg-sub;
+    padding: 0 2;
+    height: auto;
+    margin-top: 1;
+}
+
+/* ── Saved search panel ──────────────────────── */
+SavedSearchPanel {
+    align: center middle;
+    background: $bg 70%;
+}
+
+#saved-container {
+    background: $bg-alt;
+    border: round $purple;
+    width: 70;
+    height: auto;
+    max-height: 30;
+    padding: 1 2;
+}
+
+#saved-title {
+    color: $yellow;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#saved-table {
+    background: $bg-alt;
+    color: $fg;
+    height: auto;
+    max-height: 15;
+    border: tall $surface;
+}
+
+#saved-empty {
+    color: $comment;
+    padding: 1 0;
+}
+
+#saved-buttons {
+    height: 3;
+    align: right middle;
+    margin-top: 1;
+}
+
+#saved-close {
+    width: auto;
+    min-width: 8;
+    background: $surface;
+    color: $fg-sub;
+    border: tall $surface1;
+    margin-left: 1;
+}
+
+#saved-delete {
+    width: auto;
+    min-width: 8;
+    background: $red;
+    color: $fg;
+    border: tall $red;
+    margin-left: 1;
+}
+
+#saved-apply {
+    width: auto;
+    min-width: 8;
+    background: $cyan;
+    color: $bg-deep;
+    border: tall $cyan;
+    text-style: bold;
+    margin-left: 1;
+}
+
+/* ── Export panel ────────────────────────────── */
+ExportPanel {
+    align: center middle;
+    background: $bg 70%;
+}
+
+#export-container {
+    background: $bg-alt;
+    border: round $purple;
+    width: 60;
+    height: auto;
+    padding: 1 2;
+}
+
+#export-title {
+    color: $yellow;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#export-format {
+    background: $bg-alt;
+    border: none;
+    margin-top: 1;
+}
+
+#export-path {
+    background: $surface;
+    border: tall $surface1;
+    color: $fg;
+    width: 1fr;
+    margin-top: 1;
+}
+
+#export-path:focus {
+    border: tall $cyan;
+}
+
+#export-status {
+    margin-top: 1;
+    height: auto;
+}
+
+#export-buttons {
+    height: 3;
+    align: right middle;
+    margin-top: 1;
+}
+
+#export-cancel {
+    width: auto;
+    min-width: 10;
+    background: $surface;
+    color: $fg-sub;
+    border: tall $surface1;
+    margin-left: 1;
+}
+
+#export-apply {
+    width: auto;
+    min-width: 10;
+    background: $cyan;
+    color: $bg-deep;
+    border: tall $cyan;
+    text-style: bold;
+    margin-left: 1;
+}
