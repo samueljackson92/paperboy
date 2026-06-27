@@ -1,0 +1,32 @@
+# Paperboy default configuration
+# Copy to ~/.config/paperboy/config.toml and customise.
+
+[arxiv]
+# arXiv category codes to follow
+categories = ["physics.plasm-ph", "cs.LG"]
+# Optional free-text search query (combined with categories via AND)
+query = ""
+# Max papers to fetch per refresh
+limit = 50
+
+[openreview]
+# OpenReview venue IDs to follow
+venues = [
+    "NeurIPS.cc/2025/Conference",
+    "ICML.cc/2025/Conference",
+]
+limit = 50
+
+[[journals]]
+name = "Nuclear Fusion"
+feed_url = "https://iopscience.iop.org/journal/rss/0029-5515"
+
+[[journals]]
+name = "IEEE Transactions on Plasma Science"
+feed_url = "https://ieeexplore.ieee.org/rss/TOC23.XML"
+
+[app]
+# How often (minutes) to auto-refresh in the background
+refresh_interval_minutes = 30
+# Total papers kept in memory across all sources
+max_papers = 200

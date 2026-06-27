@@ -1,0 +1,195 @@
+/* Paperboy TUI — Catppuccin Mocha color scheme */
+/* https://github.com/catppuccin/catppuccin */
+
+$base:     #1e1e2e;
+$mantle:   #181825;
+$crust:    #11111b;
+$surface0: #313244;
+$surface1: #45475a;
+$surface2: #585b70;
+$overlay0: #6c7086;
+$overlay1: #7f849c;
+$subtext0: #a6adc8;
+$subtext1: #bac2de;
+$text:     #cdd6f4;
+$lavender: #b4befe;
+$blue:     #89b4fa;
+$sapphire: #74c7ec;
+$sky:      #89dceb;
+$teal:     #94e2d5;
+$green:    #a6e3a1;
+$yellow:   #f9e2af;
+$peach:    #fab387;
+$red:      #f38ba8;
+$mauve:    #cba6f7;
+$pink:     #f5c2e7;
+
+/* ── App shell ───────────────────────────────── */
+App {
+    background: $base;
+    color: $text;
+}
+
+Header {
+    background: $mantle;
+    color: $lavender;
+    text-style: bold;
+    height: 1;
+}
+
+Footer {
+    background: $mantle;
+    color: $overlay1;
+    height: 1;
+}
+
+Footer > .footer--key {
+    background: $surface0;
+    color: $blue;
+}
+
+Footer > .footer--highlight {
+    background: $surface1;
+    color: $text;
+}
+
+/* ── Status bar ──────────────────────────────── */
+#status-bar {
+    background: $crust;
+    color: $subtext0;
+    height: 1;
+    padding: 0 1;
+    border-bottom: tall $surface0;
+}
+
+/* ── Paper list ──────────────────────────────── */
+PaperList {
+    height: 1fr;
+    background: $base;
+}
+
+DataTable {
+    background: $base;
+    color: $text;
+    height: 1fr;
+}
+
+DataTable > .datatable--header {
+    background: $surface0;
+    color: $lavender;
+    text-style: bold;
+}
+
+DataTable > .datatable--header-hover {
+    background: $surface1;
+    color: $lavender;
+}
+
+DataTable > .datatable--cursor {
+    background: $surface1;
+    color: $text;
+    text-style: bold;
+}
+
+DataTable > .datatable--hover {
+    background: $surface0;
+}
+
+DataTable > .datatable--odd-row {
+    background: $mantle;
+}
+
+DataTable > .datatable--even-row {
+    background: $base;
+}
+
+/* ── Loading ─────────────────────────────────── */
+LoadingIndicator {
+    background: $base;
+    color: $blue;
+}
+
+/* ── Detail modal ────────────────────────────── */
+DetailView {
+    align: center middle;
+    background: $base 70%;
+}
+
+#detail-container {
+    background: $mantle;
+    border: round $lavender;
+    width: 80%;
+    height: 85%;
+    padding: 1 2;
+    overflow-y: auto;
+}
+
+#detail-markdown {
+    background: $mantle;
+    color: $text;
+    margin-bottom: 1;
+    padding: 0 1;
+}
+
+#close-btn {
+    background: $surface0;
+    color: $subtext1;
+    border: tall $surface1;
+    margin: 0 1 0 0;
+}
+
+#close-btn:hover {
+    background: $surface1;
+    color: $text;
+}
+
+#pdf-btn {
+    background: $blue;
+    color: $crust;
+    border: tall $sapphire;
+    text-style: bold;
+}
+
+#pdf-btn:hover {
+    background: $sapphire;
+    color: $crust;
+}
+
+/* ── Filter modal ────────────────────────────── */
+FilterPanel {
+    align: center middle;
+    background: $base 70%;
+}
+
+#filter-title {
+    background: $surface0;
+    color: $lavender;
+    text-style: bold;
+    padding: 0 2;
+    width: 40;
+}
+
+OptionList {
+    background: $mantle;
+    border: round $lavender;
+    color: $text;
+    width: 40;
+    height: auto;
+    max-height: 20;
+}
+
+OptionList > .option-list--option-highlighted {
+    background: $surface1;
+    color: $text;
+    text-style: bold;
+}
+
+OptionList > .option-list--option {
+    padding: 0 2;
+    color: $subtext1;
+}
+
+OptionList > .option-list--option:hover {
+    background: $surface0;
+    color: $text;
+}
