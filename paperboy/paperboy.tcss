@@ -176,6 +176,80 @@ DetailView {
     color: $crust;
 }
 
+#view-pdf-btn {
+    width: auto;
+    min-width: 12;
+    background: $surface1;
+    color: $text;
+    border: tall $overlay0;
+    margin-left: 1;
+}
+
+#view-pdf-btn:hover {
+    background: $overlay0;
+    color: $text;
+}
+
+/* ── PDF reader modal ────────────────────────── */
+PDFView {
+    align: center middle;
+    background: $base 70%;
+}
+
+#pdf-container {
+    background: $mantle;
+    border: round $blue;
+    width: 85%;
+    height: 92%;
+    overflow: hidden;
+    padding: 0;
+}
+
+#pdf-title {
+    color: $lavender;
+    text-style: bold;
+    padding: 1 2 0 2;
+}
+
+#pdf-authors {
+    color: $subtext1;
+    padding: 0 2 1 2;
+    border-bottom: tall $surface0;
+}
+
+#pdf-loading {
+    height: 1fr;
+    color: $blue;
+}
+
+#pdf-body {
+    height: 1fr;
+    background: $mantle;
+    color: $text;
+    padding: 1 2;
+    overflow-y: auto;
+}
+
+#pdf-actions {
+    height: 3;
+    align: right middle;
+    padding: 0 2;
+    border-top: tall $surface0;
+}
+
+#pdf-close-btn {
+    width: auto;
+    min-width: 10;
+    background: $surface0;
+    color: $subtext1;
+    border: tall $surface1;
+}
+
+#pdf-close-btn:hover {
+    background: $surface1;
+    color: $text;
+}
+
 /* ── Filter modal ────────────────────────────── */
 FilterPanel {
     align: center middle;
