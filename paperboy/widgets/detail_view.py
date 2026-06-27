@@ -10,7 +10,6 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, Markdown, Static
 
 from paperboy.models import Paper
-from paperboy.widgets.pdf_view import PDFView
 
 
 class DetailView(ModalScreen[None]):
@@ -44,8 +43,7 @@ class DetailView(ModalScreen[None]):
             with Horizontal(id="detail-actions"):
                 yield Button("Close", id="close-btn", variant="default")
                 if p.pdf_url:
-                    yield Button("View PDF", id="view-pdf-btn")
-                    yield Button("Browser", id="pdf-btn", variant="primary")
+                    yield Button("Open PDF", id="pdf-btn", variant="primary")
 
     def action_dismiss_modal(self) -> None:
         self.dismiss(None)
@@ -57,7 +55,5 @@ class DetailView(ModalScreen[None]):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "close-btn":
             self.dismiss(None)
-        elif event.button.id == "view-pdf-btn":
-            self.app.push_screen(PDFView(self._paper))
         elif event.button.id == "pdf-btn":
             self.action_open_pdf()

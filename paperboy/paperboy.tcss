@@ -162,20 +162,6 @@ DetailView {
     color: $fg;
 }
 
-#view-pdf-btn {
-    width: auto;
-    min-width: 12;
-    background: $surface1;
-    color: $orange;
-    border: tall $comment;
-    margin-left: 1;
-}
-
-#view-pdf-btn:hover {
-    background: $comment;
-    color: $fg;
-}
-
 #pdf-btn {
     width: auto;
     min-width: 12;
@@ -189,66 +175,6 @@ DetailView {
 #pdf-btn:hover {
     background: $green;
     color: $bg-deep;
-}
-
-/* ── PDF reader modal ────────────────────────── */
-PDFView {
-    align: center middle;
-    background: $bg 70%;
-}
-
-#pdf-container {
-    background: $bg-alt;
-    border: round $cyan;
-    width: 85%;
-    height: 92%;
-    overflow: hidden;
-    padding: 0;
-}
-
-#pdf-title {
-    color: $green;
-    text-style: bold;
-    padding: 1 2 0 2;
-}
-
-#pdf-authors {
-    color: $fg-sub;
-    padding: 0 2 1 2;
-    border-bottom: tall $surface;
-}
-
-#pdf-loading {
-    height: 1fr;
-    color: $cyan;
-}
-
-#pdf-body {
-    height: 1fr;
-    background: $bg-alt;
-    color: $fg;
-    padding: 1 2;
-    overflow-y: auto;
-}
-
-#pdf-actions {
-    height: 3;
-    align: right middle;
-    padding: 0 2;
-    border-top: tall $surface;
-}
-
-#pdf-close-btn {
-    width: auto;
-    min-width: 10;
-    background: $surface;
-    color: $fg-sub;
-    border: tall $surface1;
-}
-
-#pdf-close-btn:hover {
-    background: $surface1;
-    color: $fg;
 }
 
 /* ── Filter modal ────────────────────────────── */
