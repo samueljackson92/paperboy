@@ -332,7 +332,70 @@ FilterPanel {
     margin-top: 1;
 }
 
-/* ── Saved search panel ──────────────────────── */
+/* ── Saved searches tab ──────────────────────── */
+SavedSearchList {
+    height: 1fr;
+    background: $bg;
+    padding: 1 2;
+}
+
+#searches-inner {
+    height: 1fr;
+    background: $bg;
+}
+
+#searches-title {
+    color: $yellow;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#searches-empty {
+    color: $comment;
+    padding: 1 0;
+}
+
+#searches-table {
+    background: $bg;
+    color: $fg;
+    height: 1fr;
+    border: tall $surface;
+    margin-bottom: 1;
+}
+
+#searches-buttons {
+    height: 3;
+    align: left middle;
+}
+
+#searches-apply {
+    width: auto;
+    min-width: 14;
+    background: $cyan;
+    color: $bg-deep;
+    border: tall $cyan;
+    text-style: bold;
+    margin-right: 1;
+}
+
+#searches-apply:hover {
+    background: $green;
+    color: $bg-deep;
+}
+
+#searches-delete {
+    width: auto;
+    min-width: 12;
+    background: $red;
+    color: $fg;
+    border: tall $red;
+}
+
+#searches-delete:hover {
+    background: $orange;
+}
+
+/* ── Saved search panel (modal) ──────────────── */
 SavedSearchPanel {
     align: center middle;
     background: $bg 70%;

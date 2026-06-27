@@ -32,12 +32,13 @@ from paperboy.widgets.detail_view import DetailView
 from paperboy.widgets.export_panel import ExportPanel
 from paperboy.widgets.filter_panel import FilterPanel, SavedFilterResult
 from paperboy.widgets.paper_list import PaperList
-from paperboy.widgets.saved_search_panel import SavedSearchPanel
+from paperboy.widgets.saved_search_list import SavedSearchList
 
 logger = logging.getLogger(__name__)
 
 _FEED_TAB = "tab-feed"
 _BOOKMARKS_TAB = "tab-bookmarks"
+_SEARCHES_TAB = "tab-searches"
 _FEED_LIST = "feed-list"
 _BOOKMARKS_LIST = "bookmark-list"
 
@@ -53,7 +54,6 @@ class ResearchFeedApp(App[None]):
         Binding("r", "refresh", "Refresh", show=True),
         Binding("f", "filter", "Filter", show=True),
         Binding("e", "export", "Export", show=True),
-        Binding("S", "saved_searches", "Searches", show=True),
         Binding("o", "open_pdf", "Open PDF", show=True),
         Binding("y", "copy_bibtex", "Copy BibTeX", show=False),
         Binding("j", "move_down", "Down", show=False),
@@ -98,6 +98,8 @@ class ResearchFeedApp(App[None]):
                 yield PaperList(id=_FEED_LIST)
             with TabPane("Bookmarks ★", id=_BOOKMARKS_TAB):
                 yield PaperList(id=_BOOKMARKS_LIST)
+            with TabPane("Searches", id=_SEARCHES_TAB):
+                yield SavedSearchList(self._store, id="searches-list")
         yield LoadingIndicator(id="loading")
         yield DetailView(id="detail-view")
         yield Footer()
@@ -118,6 +120,9 @@ class ResearchFeedApp(App[None]):
         active = tabs.active
         list_id = _BOOKMARKS_LIST if active == _BOOKMARKS_TAB else _FEED_LIST
         return self.query_one(f"#{list_id}", PaperList)
+
+    def _on_searches_tab(self) -> bool:
+        return self.query_one("#main-tabs", TabbedContent).active == _SEARCHES_TAB
 
     def _apply_paper_update(self, updated: Paper) -> None:
         self._all_papers = [updated if p.id == updated.id else p for p in self._all_papers]
@@ -177,6 +182,8 @@ class ResearchFeedApp(App[None]):
         self._update_status()
 
     def action_filter(self) -> None:
+        if self._on_searches_tab():
+            return
         pl = self._active_list()
 
         def handle_filter(result: object) -> None:
@@ -184,6 +191,7 @@ class ResearchFeedApp(App[None]):
                 self._store.save_search(result.name, result.state)
                 pl.apply_filters(result.state)
                 self.notify(f'Search "{result.name}" saved', timeout=1.5)
+                self.query_one("#searches-list", SavedSearchList).reload()
                 self._update_status()
             elif isinstance(result, FilterState):
                 pl.apply_filters(result)
@@ -195,17 +203,9 @@ class ResearchFeedApp(App[None]):
         )
 
     def action_export(self) -> None:
+        if self._on_searches_tab():
+            return
         self.push_screen(ExportPanel(self._active_list()._visible_papers))
-
-    def action_saved_searches(self) -> None:
-        pl = self._active_list()
-
-        def handle_result(state: FilterState | None) -> None:
-            if isinstance(state, FilterState):
-                pl.apply_filters(state)
-                self._update_status()
-
-        self.push_screen(SavedSearchPanel(self._store, pl.current_filter), handle_result)
 
     def action_open_pdf(self) -> None:
         self.query_one("#detail-view", DetailView).open_pdf()
@@ -224,10 +224,12 @@ class ResearchFeedApp(App[None]):
             logger.info("BibTeX:\n%s", bib)
 
     def action_move_down(self) -> None:
-        self._active_list().query_one(DataTable).action_scroll_down()
+        if not self._on_searches_tab():
+            self._active_list().query_one(DataTable).action_scroll_down()
 
     def action_move_up(self) -> None:
-        self._active_list().query_one(DataTable).action_scroll_up()
+        if not self._on_searches_tab():
+            self._active_list().query_one(DataTable).action_scroll_up()
 
     def on_paper_list_paper_highlighted(self, event: PaperList.PaperHighlighted) -> None:
         tabs = self.query_one("#main-tabs", TabbedContent)
@@ -236,12 +238,22 @@ class ResearchFeedApp(App[None]):
             self.query_one("#detail-view", DetailView).show_paper(event.paper)
 
     def on_tabbed_content_tab_activated(self, event: TabbedContent.TabActivated) -> None:
+        if self._on_searches_tab():
+            self.query_one("#searches-list", SavedSearchList).reload()
+            return
         active_list = self._active_list()
         table = active_list.query_one(DataTable)
         if table.cursor_row < len(active_list._visible_papers):
             paper = active_list._visible_papers[table.cursor_row]
             self.query_one("#detail-view", DetailView).show_paper(paper)
         self._update_status()
+
+    def on_saved_search_list_search_applied(self, event: SavedSearchList.SearchApplied) -> None:
+        feed_list = self.query_one(f"#{_FEED_LIST}", PaperList)
+        feed_list.apply_filters(event.state)
+        self.query_one("#main-tabs", TabbedContent).active = _FEED_TAB
+        self._update_status()
+        self.notify("Filter applied", timeout=1.5)
 
     def on_paper_list_paper_selected(self, event: PaperList.PaperSelected) -> None:
         paper = event.paper
