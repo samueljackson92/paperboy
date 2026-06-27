@@ -85,18 +85,36 @@ class ResearchFeedApp(App[None]):
 
     def _update_status(self) -> None:
         pl = self.query_one("#paper-list", PaperList)
-        self.query_one("#status-bar", Static).update(
-            f"Unread: [bold]{pl.unread_count}[/bold]  |  Last refresh: {self.last_refresh}"
-        )
+        f = pl.current_filter
+        parts = [f"Unread: [bold]{pl.unread_count}[/bold]"]
+        if pl.bookmark_count:
+            parts.append(f"Bookmarked: [bold]{pl.bookmark_count}[/bold]")
+        parts.append(f"Last refresh: {self.last_refresh}")
+        active = []
+        if f.source != "All":
+            active.append(f.source)
+        if f.keywords:
+            active.append(f'"{f.keywords}"')
+        if f.bookmarked_only:
+            active.append("bookmarked")
+        if active:
+            parts.append(f"Filter: {', '.join(active)}")
+        self.query_one("#status-bar", Static).update("  |  ".join(parts))
 
     @work(exclusive=True)
     async def action_refresh(self) -> None:
-        """Fetch papers from all sources in a background worker."""
         self.loading = True
         try:
             papers = await self._sources.fetch_all(limit=self._config.app.max_papers)
             read_ids = self._store.get_all_read_ids()
-            papers = [p.with_read_state(p.id in read_ids) for p in papers]
+            bookmarked_ids = self._store.get_all_bookmarked_ids()
+            papers = [
+                p.model_copy(update={
+                    "is_read": p.id in read_ids,
+                    "is_bookmarked": p.id in bookmarked_ids,
+                })
+                for p in papers
+            ]
             pl = self.query_one("#paper-list", PaperList)
             pl.set_papers(papers)
             self.last_refresh = datetime.now(tz=timezone.utc).strftime("%H:%M:%S UTC")
@@ -110,12 +128,16 @@ class ResearchFeedApp(App[None]):
     def action_filter(self) -> None:
         pl = self.query_one("#paper-list", PaperList)
 
-        def handle_filter(result: str | None) -> None:
-            if result is not None:
-                pl.active_filter = result
+        def handle_filter(result: object) -> None:
+            from paperboy.widgets.filter_panel import FilterState
+            if isinstance(result, FilterState):
+                pl.apply_filters(result)
                 self._update_status()
 
-        self.push_screen(FilterPanel(pl.source_names, pl.active_filter), handle_filter)
+        self.push_screen(
+            FilterPanel(pl.source_names, pl.current_filter),
+            handle_filter,
+        )
 
     def action_open_pdf(self) -> None:
         self.query_one("#detail-view", DetailView).open_pdf()
@@ -133,8 +155,7 @@ class ResearchFeedApp(App[None]):
         paper = event.paper
         updated = paper.with_read_state(True)
         self._store.mark_read(paper.id)
-        pl = self.query_one("#paper-list", PaperList)
-        pl.update_paper(updated)
+        self.query_one("#paper-list", PaperList).update_paper(updated)
         self._update_status()
 
     def on_paper_list_paper_toggled(self, event: PaperList.PaperToggled) -> None:
@@ -145,6 +166,15 @@ class ResearchFeedApp(App[None]):
         else:
             self._store.mark_unread(paper.id)
         self.query_one("#paper-list", PaperList).update_paper(paper.with_read_state(new_read))
+        self._update_status()
+
+    def on_paper_list_paper_bookmarked(self, event: PaperList.PaperBookmarked) -> None:
+        paper = event.paper
+        new_state = self._store.toggle_bookmark(paper.id)
+        updated = paper.with_bookmark_state(new_state)
+        self.query_one("#paper-list", PaperList).update_paper(updated)
+        label = "Bookmarked ★" if new_state else "Bookmark removed"
+        self.notify(label, timeout=1.5)
         self._update_status()
 
 

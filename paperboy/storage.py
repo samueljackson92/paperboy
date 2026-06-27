@@ -26,6 +26,10 @@ class ReadStateStore:
             "CREATE TABLE IF NOT EXISTS read_state "
             "(paper_id TEXT PRIMARY KEY, is_read INTEGER NOT NULL DEFAULT 0)"
         )
+        self._conn.execute(
+            "CREATE TABLE IF NOT EXISTS bookmarks "
+            "(paper_id TEXT PRIMARY KEY)"
+        )
         self._conn.commit()
 
     def is_read(self, paper_id: str) -> bool:
@@ -54,10 +58,26 @@ class ReadStateStore:
         self._conn.commit()
 
     def get_all_read_ids(self) -> set[str]:
-        """Return all paper IDs currently marked as read."""
         rows = self._conn.execute(
             "SELECT paper_id FROM read_state WHERE is_read = 1"
         ).fetchall()
+        return {r[0] for r in rows}
+
+    def toggle_bookmark(self, paper_id: str) -> bool:
+        """Toggle bookmark; returns the new state (True = bookmarked)."""
+        exists = self._conn.execute(
+            "SELECT 1 FROM bookmarks WHERE paper_id = ?", (paper_id,)
+        ).fetchone()
+        if exists:
+            self._conn.execute("DELETE FROM bookmarks WHERE paper_id = ?", (paper_id,))
+            self._conn.commit()
+            return False
+        self._conn.execute("INSERT INTO bookmarks (paper_id) VALUES (?)", (paper_id,))
+        self._conn.commit()
+        return True
+
+    def get_all_bookmarked_ids(self) -> set[str]:
+        rows = self._conn.execute("SELECT paper_id FROM bookmarks").fetchall()
         return {r[0] for r in rows}
 
     def close(self) -> None:

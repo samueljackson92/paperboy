@@ -32,7 +32,10 @@ class Paper(BaseModel):
     html_url: str | None = None
     categories: list[str] = Field(default_factory=list)
     is_read: bool = False
+    is_bookmarked: bool = False
 
     def with_read_state(self, is_read: bool) -> Paper:
-        """Return a new Paper with updated read state."""
         return self.model_copy(update={"is_read": is_read})
+
+    def with_bookmark_state(self, is_bookmarked: bool) -> Paper:
+        return self.model_copy(update={"is_bookmarked": is_bookmarked})

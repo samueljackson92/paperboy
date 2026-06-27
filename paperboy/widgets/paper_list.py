@@ -6,14 +6,14 @@ from typing import ClassVar
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.message import Message
-from textual.reactive import reactive
 from textual.widget import Widget
 from textual.widgets import DataTable
 
 from paperboy.models import Paper
+from paperboy.widgets.filter_panel import FilterState
 
-UNREAD_INDICATOR = "●"
-READ_INDICATOR = " "
+UNREAD = "●"
+BOOKMARK = "★"
 
 
 class PaperList(Widget):
@@ -22,9 +22,8 @@ class PaperList(Widget):
     BINDINGS: ClassVar[list[Binding]] = [
         Binding("enter", "select_paper", "Open", show=True),
         Binding("space", "toggle_read", "Toggle read", show=True),
+        Binding("b", "toggle_bookmark", "Bookmark", show=True),
     ]
-
-    active_filter: reactive[str] = reactive("All")
 
     class PaperSelected(Message):
         def __init__(self, paper: Paper) -> None:
@@ -41,10 +40,16 @@ class PaperList(Widget):
             super().__init__()
             self.paper = paper
 
+    class PaperBookmarked(Message):
+        def __init__(self, paper: Paper) -> None:
+            super().__init__()
+            self.paper = paper
+
     def __init__(self, papers: list[Paper] | None = None, **kwargs: object) -> None:
         super().__init__(**kwargs)
         self._all_papers: list[Paper] = papers or []
         self._visible_papers: list[Paper] = []
+        self._filter = FilterState()
 
     def compose(self) -> ComposeResult:
         table: DataTable[str] = DataTable(cursor_type="row", zebra_stripes=True)
@@ -56,24 +61,43 @@ class PaperList(Widget):
         self._refresh_table()
 
     def set_papers(self, papers: list[Paper]) -> None:
-        """Replace the full paper list and re-render."""
         self._all_papers = papers
         self._refresh_table()
 
-    def watch_active_filter(self, value: str) -> None:
+    def apply_filters(self, state: FilterState) -> None:
+        self._filter = state
+        self._refresh_table()
+
+    @property
+    def current_filter(self) -> FilterState:
+        return self._filter
+
+    # kept for backwards-compat with tests
+    @property
+    def active_filter(self) -> str:
+        return self._filter.source
+
+    @active_filter.setter
+    def active_filter(self, value: str) -> None:
+        self._filter = FilterState(source=value, keywords=self._filter.keywords,
+                                   bookmarked_only=self._filter.bookmarked_only)
         self._refresh_table()
 
     def _refresh_table(self) -> None:
         table = self.query_one(DataTable)
         table.clear()
-        filt = self.active_filter
+
+        kw = self._filter.keywords.lower()
         self._visible_papers = [
             p for p in self._all_papers
-            if filt == "All" or p.source == filt
+            if (self._filter.source == "All" or p.source == self._filter.source)
+            and (not kw or kw in p.title.lower() or kw in p.abstract.lower())
+            and (not self._filter.bookmarked_only or p.is_bookmarked)
         ]
+
         for paper in self._visible_papers:
-            indicator = READ_INDICATOR if paper.is_read else UNREAD_INDICATOR
-            title = paper.title[:72] + "…" if len(paper.title) > 72 else paper.title
+            indicator = (BOOKMARK if paper.is_bookmarked else " ") + (UNREAD if not paper.is_read else " ")
+            title = paper.title[:70] + "…" if len(paper.title) > 70 else paper.title
             authors_str = ", ".join(paper.authors[:2])
             if len(paper.authors) > 2:
                 authors_str += f" +{len(paper.authors) - 2}"
@@ -86,7 +110,7 @@ class PaperList(Widget):
                 date_str,
                 key=paper.id,
             )
-        # Ensure the detail pane reflects the first visible paper after every rebuild.
+
         if self._visible_papers:
             self.post_message(self.PaperHighlighted(self._visible_papers[0]))
 
@@ -100,6 +124,11 @@ class PaperList(Widget):
         if table.cursor_row < len(self._visible_papers):
             self.post_message(self.PaperToggled(self._visible_papers[table.cursor_row]))
 
+    def action_toggle_bookmark(self) -> None:
+        table = self.query_one(DataTable)
+        if table.cursor_row < len(self._visible_papers):
+            self.post_message(self.PaperBookmarked(self._visible_papers[table.cursor_row]))
+
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         if event.cursor_row < len(self._visible_papers):
             self.post_message(self.PaperSelected(self._visible_papers[event.cursor_row]))
@@ -109,15 +138,16 @@ class PaperList(Widget):
             self.post_message(self.PaperHighlighted(self._visible_papers[event.cursor_row]))
 
     def update_paper(self, updated: Paper) -> None:
-        """Replace one paper in-place and re-render."""
-        self._all_papers = [
-            updated if p.id == updated.id else p for p in self._all_papers
-        ]
+        self._all_papers = [updated if p.id == updated.id else p for p in self._all_papers]
         self._refresh_table()
 
     @property
     def unread_count(self) -> int:
         return sum(1 for p in self._all_papers if not p.is_read)
+
+    @property
+    def bookmark_count(self) -> int:
+        return sum(1 for p in self._all_papers if p.is_bookmarked)
 
     @property
     def source_names(self) -> list[str]:
