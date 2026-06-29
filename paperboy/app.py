@@ -55,7 +55,7 @@ class ResearchFeedApp(App[None]):
         Binding("r", "refresh", "Refresh", show=True),
         Binding("f", "filter", "Filter", show=True),
         Binding("e", "export", "Export", show=True),
-        Binding("o", "open_pdf", "Open PDF", show=True),
+        Binding("o", "open_pdf", "Open", show=True),
         Binding("y", "copy_bibtex", "Copy BibTeX", show=False),
         Binding("j", "move_down", "Down", show=False),
         Binding("k", "move_up", "Up", show=False),

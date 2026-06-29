@@ -17,7 +17,6 @@ class DetailView(Widget):
 
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
-        self._current_pdf_url: str | None = None
         self._current_paper: Paper | None = None
 
     def compose(self) -> ComposeResult:
@@ -45,7 +44,6 @@ class DetailView(Widget):
         self.query_one("#detail-markdown", Markdown).update(
             strip_latex(paper.abstract) if paper.abstract else "_No abstract available._"
         )
-        self._current_pdf_url = paper.pdf_url
         self.query_one("#related-list", Static).update("")
         self._load_related(paper)
 
@@ -69,5 +67,11 @@ class DetailView(Widget):
         self.query_one("#related-list", Static).update("\n".join(lines))
 
     def open_pdf(self) -> None:
-        if self._current_pdf_url:
-            webbrowser.open(self._current_pdf_url)
+        paper = self._current_paper
+        if paper is None:
+            return
+        url = paper.pdf_url or paper.html_url
+        if url:
+            webbrowser.open(url)
+        else:
+            self.app.notify("No URL available for this paper", severity="warning", timeout=2)
