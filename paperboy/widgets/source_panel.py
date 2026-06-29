@@ -19,22 +19,27 @@ class SourcePanel(Widget):
     def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
         self._sources: list[str] = []
+        self._unread: dict[str, int] = {}
 
     def compose(self) -> ComposeResult:
         yield OptionList(id="source-option-list")
 
     def on_mount(self) -> None:
-        self._rebuild(["All"])
+        self._rebuild()
 
-    def set_sources(self, sources: list[str]) -> None:
+    def set_sources(self, sources: list[str], unread_counts: dict[str, int] | None = None) -> None:
         self._sources = list(sources)
-        self._rebuild(["All"] + self._sources)
+        self._unread = unread_counts or {}
+        self._rebuild()
 
-    def _rebuild(self, options: list[str]) -> None:
+    def _rebuild(self) -> None:
         ol = self.query_one(OptionList)
         ol.clear_options()
-        for s in options:
-            ol.add_option(Option(s, id=s))
+        total = sum(self._unread.values())
+        ol.add_option(Option(f"All ({total})" if total else "All", id="All"))
+        for s in self._sources:
+            count = self._unread.get(s, 0)
+            ol.add_option(Option(f"{s} ({count})" if count else s, id=s))
         ol.highlighted = 0
 
     def set_active_source(self, source: str) -> None:

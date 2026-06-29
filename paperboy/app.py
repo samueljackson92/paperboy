@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import dataclasses
 import logging
+from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -127,6 +128,13 @@ class ResearchFeedApp(App[None]):
         self.query_one(f"#{_FEED_LIST}", PaperList).update_paper(updated)
         bookmarked = [p for p in self._all_papers if p.is_bookmarked]
         self.query_one(f"#{_BOOKMARKS_LIST}", PaperList).set_papers(bookmarked)
+        unread_by_source: dict[str, int] = Counter(
+            p.source for p in self._all_papers if not p.is_read
+        )
+        feed_list = self.query_one(f"#{_FEED_LIST}", PaperList)
+        self.query_one("#source-panel", SourcePanel).set_sources(
+            feed_list.source_names, unread_by_source
+        )
 
     def _update_status(self) -> None:
         pl = self.query_one(f"#{_FEED_LIST}", PaperList)
@@ -170,7 +178,12 @@ class ResearchFeedApp(App[None]):
             feed_list.set_papers(self._all_papers)
             bookmarked = [p for p in self._all_papers if p.is_bookmarked]
             self.query_one(f"#{_BOOKMARKS_LIST}", PaperList).set_papers(bookmarked)
-            self.query_one("#source-panel", SourcePanel).set_sources(feed_list.source_names)
+            unread_by_source: dict[str, int] = Counter(
+                p.source for p in self._all_papers if not p.is_read
+            )
+            self.query_one("#source-panel", SourcePanel).set_sources(
+                feed_list.source_names, unread_by_source
+            )
             self.last_refresh = datetime.now(tz=timezone.utc).strftime("%H:%M:%S UTC")
             feed_list.query_one(DataTable).focus()
         except Exception as exc:
