@@ -1,6 +1,7 @@
 """Main Textual application for paperboy."""
 from __future__ import annotations
 
+import dataclasses
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
@@ -8,6 +9,7 @@ from pathlib import Path
 from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
+from textual.containers import Horizontal, Vertical
 from textual.reactive import reactive
 from textual.widgets import (
     DataTable,
@@ -32,6 +34,7 @@ from paperboy.widgets.detail_view import DetailView
 from paperboy.widgets.export_panel import ExportPanel
 from paperboy.widgets.filter_panel import FilterPanel
 from paperboy.widgets.paper_list import PaperList
+from paperboy.widgets.source_panel import SourcePanel
 
 logger = logging.getLogger(__name__)
 
@@ -91,13 +94,16 @@ class ResearchFeedApp(App[None]):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         yield Static("", id="status-bar")
-        with TabbedContent(id="main-tabs"):
-            with TabPane("Feed", id=_FEED_TAB):
-                yield PaperList(id=_FEED_LIST)
-            with TabPane("Bookmarks ★", id=_BOOKMARKS_TAB):
-                yield PaperList(id=_BOOKMARKS_LIST)
-        yield LoadingIndicator(id="loading")
-        yield DetailView(id="detail-view")
+        with Horizontal(id="main-area"):
+            yield SourcePanel(id="source-panel")
+            with Vertical(id="main-content"):
+                with TabbedContent(id="main-tabs"):
+                    with TabPane("Feed", id=_FEED_TAB):
+                        yield PaperList(id=_FEED_LIST)
+                    with TabPane("Bookmarks ★", id=_BOOKMARKS_TAB):
+                        yield PaperList(id=_BOOKMARKS_LIST)
+                yield LoadingIndicator(id="loading")
+                yield DetailView(id="detail-view")
         yield Footer()
 
     def on_mount(self) -> None:
@@ -165,6 +171,7 @@ class ResearchFeedApp(App[None]):
             feed_list.set_papers(self._all_papers)
             bookmarked = [p for p in self._all_papers if p.is_bookmarked]
             self.query_one(f"#{_BOOKMARKS_LIST}", PaperList).set_papers(bookmarked)
+            self.query_one("#source-panel", SourcePanel).set_sources(feed_list.source_names)
             self.last_refresh = datetime.now(tz=timezone.utc).strftime("%H:%M:%S UTC")
             feed_list.query_one(DataTable).focus()
         except Exception as exc:
@@ -180,12 +187,19 @@ class ResearchFeedApp(App[None]):
         def handle_filter(result: FilterState | None) -> None:
             if isinstance(result, FilterState):
                 pl.apply_filters(result)
+                self.query_one("#source-panel", SourcePanel).set_active_source(result.source)
                 self._update_status()
 
         self.push_screen(
             FilterPanel(pl.source_names, pl.current_filter),
             handle_filter,
         )
+
+    def on_source_panel_source_selected(self, event: SourcePanel.SourceSelected) -> None:
+        for list_id in (_FEED_LIST, _BOOKMARKS_LIST):
+            pl = self.query_one(f"#{list_id}", PaperList)
+            pl.apply_filters(dataclasses.replace(pl.current_filter, source=event.source))
+        self._update_status()
 
     def action_export(self) -> None:
         self.push_screen(ExportPanel(self._active_list()._visible_papers))
