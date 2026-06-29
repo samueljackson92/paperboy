@@ -54,13 +54,8 @@ Footer > .footer--highlight {
     border-bottom: tall $surface;
 }
 
-/* ── Main area ───────────────────────────────── */
-#main-area {
-    height: 1fr;
-}
-
-#main-content {
-    width: 1fr;
+/* ── Feed area (sidebar + list) ──────────────── */
+#feed-area {
     height: 1fr;
 }
 
@@ -140,6 +135,7 @@ Tabs > .tabs--transparent-underline {
 /* ── Paper list ──────────────────────────────── */
 PaperList {
     height: 1fr;
+    width: 1fr;
     background: $bg;
 }
 

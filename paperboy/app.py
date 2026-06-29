@@ -94,16 +94,15 @@ class ResearchFeedApp(App[None]):
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
         yield Static("", id="status-bar")
-        with Horizontal(id="main-area"):
-            yield SourcePanel(id="source-panel")
-            with Vertical(id="main-content"):
-                with TabbedContent(id="main-tabs"):
-                    with TabPane("Feed", id=_FEED_TAB):
-                        yield PaperList(id=_FEED_LIST)
-                    with TabPane("Bookmarks ★", id=_BOOKMARKS_TAB):
-                        yield PaperList(id=_BOOKMARKS_LIST)
-                yield LoadingIndicator(id="loading")
-                yield DetailView(id="detail-view")
+        with TabbedContent(id="main-tabs"):
+            with TabPane("Feed", id=_FEED_TAB):
+                with Horizontal(id="feed-area"):
+                    yield SourcePanel(id="source-panel")
+                    yield PaperList(id=_FEED_LIST)
+            with TabPane("Bookmarks ★", id=_BOOKMARKS_TAB):
+                yield PaperList(id=_BOOKMARKS_LIST)
+        yield LoadingIndicator(id="loading")
+        yield DetailView(id="detail-view")
         yield Footer()
 
     def on_mount(self) -> None:

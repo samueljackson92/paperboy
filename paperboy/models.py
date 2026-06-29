@@ -52,5 +52,5 @@ class FilterState:
     source: str = "All"
     keywords: str = ""
     bookmarked_only: bool = False
-    sort_by: Literal["date", "source", "title"] = "date"
+    sort_by: Literal["date", "source", "title", "authors", "cited"] = "date"
     sort_desc: bool = True

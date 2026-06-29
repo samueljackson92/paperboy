@@ -1,6 +1,7 @@
 """Paper list widget showing all fetched papers."""
 from __future__ import annotations
 
+import dataclasses
 from typing import ClassVar
 
 from textual.app import ComposeResult
@@ -18,7 +19,12 @@ _SORT_KEY = {
     "date": lambda p: p.published,
     "title": lambda p: p.title.lower(),
     "source": lambda p: p.source.lower(),
+    "authors": lambda p: (p.authors[0].lower() if p.authors else ""),
+    "cited": lambda p: (p.citation_count or 0),
 }
+
+# Maps column index → sort_by key (None = not sortable)
+_COL_SORT = [None, "title", "source", "authors", "date", "cited"]
 
 
 class PaperList(Widget):
@@ -122,7 +128,12 @@ class PaperList(Widget):
         self._visible_papers.sort(key=sort_fn, reverse=self._filter.sort_desc)
 
         for paper in self._visible_papers:
-            indicator = (BOOKMARK if paper.is_bookmarked else " ") + (UNREAD if not paper.is_read else " ")
+            if paper.is_bookmarked:
+                indicator = BOOKMARK
+            elif not paper.is_read:
+                indicator = UNREAD
+            else:
+                indicator = " "
             title = paper.title[:70] + "…" if len(paper.title) > 70 else paper.title
             authors_str = ", ".join(paper.authors[:2])
             if len(paper.authors) > 2:
@@ -209,6 +220,16 @@ class PaperList(Widget):
         table = self.query_one(DataTable)
         if table.cursor_row < len(self._visible_papers):
             self.post_message(self.PaperBookmarked(self._visible_papers[table.cursor_row]))
+
+    def on_data_table_header_selected(self, event: DataTable.HeaderSelected) -> None:
+        sort_key = _COL_SORT[event.column_index] if event.column_index < len(_COL_SORT) else None
+        if sort_key is None:
+            return
+        if self._filter.sort_by == sort_key:
+            self._filter = dataclasses.replace(self._filter, sort_desc=not self._filter.sort_desc)
+        else:
+            self._filter = dataclasses.replace(self._filter, sort_by=sort_key, sort_desc=True)
+        self._refresh_table()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         if event.cursor_row < len(self._visible_papers):
