@@ -4,8 +4,6 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from paperboy.models import FilterState
-
 
 DATA_DIR = Path.home() / ".local" / "share" / "paperboy"
 
@@ -31,16 +29,6 @@ class ReadStateStore:
         self._conn.execute(
             "CREATE TABLE IF NOT EXISTS bookmarks "
             "(paper_id TEXT PRIMARY KEY)"
-        )
-        self._conn.execute(
-            "CREATE TABLE IF NOT EXISTS saved_searches ("
-            "name TEXT PRIMARY KEY, "
-            "source TEXT NOT NULL DEFAULT 'All', "
-            "keywords TEXT NOT NULL DEFAULT '', "
-            "bookmarked_only INTEGER NOT NULL DEFAULT 0, "
-            "sort_by TEXT NOT NULL DEFAULT 'date', "
-            "sort_desc INTEGER NOT NULL DEFAULT 1"
-            ")"
         )
         self._conn.commit()
 
@@ -91,40 +79,6 @@ class ReadStateStore:
     def get_all_bookmarked_ids(self) -> set[str]:
         rows = self._conn.execute("SELECT paper_id FROM bookmarks").fetchall()
         return {r[0] for r in rows}
-
-    def save_search(self, name: str, state: FilterState) -> None:
-        """Persist a named filter state."""
-        self._conn.execute(
-            "INSERT INTO saved_searches (name, source, keywords, bookmarked_only, sort_by, sort_desc) "
-            "VALUES (?, ?, ?, ?, ?, ?) "
-            "ON CONFLICT(name) DO UPDATE SET source=excluded.source, keywords=excluded.keywords, "
-            "bookmarked_only=excluded.bookmarked_only, sort_by=excluded.sort_by, sort_desc=excluded.sort_desc",
-            (name, state.source, state.keywords, int(state.bookmarked_only), state.sort_by, int(state.sort_desc)),
-        )
-        self._conn.commit()
-
-    def get_saved_searches(self) -> list[tuple[str, FilterState]]:
-        """Return all saved searches as (name, FilterState) pairs."""
-        rows = self._conn.execute(
-            "SELECT name, source, keywords, bookmarked_only, sort_by, sort_desc FROM saved_searches ORDER BY name"
-        ).fetchall()
-        return [
-            (
-                row[0],
-                FilterState(
-                    source=row[1],
-                    keywords=row[2],
-                    bookmarked_only=bool(row[3]),
-                    sort_by=row[4],
-                    sort_desc=bool(row[5]),
-                ),
-            )
-            for row in rows
-        ]
-
-    def delete_search(self, name: str) -> None:
-        self._conn.execute("DELETE FROM saved_searches WHERE name = ?", (name,))
-        self._conn.commit()
 
     def close(self) -> None:
         self._conn.close()

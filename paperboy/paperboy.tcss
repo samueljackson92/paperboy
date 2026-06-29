@@ -277,20 +277,6 @@ FilterPanel {
     color: $bg-deep;
 }
 
-#filter-save {
-    width: auto;
-    min-width: 8;
-    background: $surface;
-    color: $fg-sub;
-    border: tall $surface1;
-    margin-left: 1;
-}
-
-#filter-save:hover {
-    background: $surface1;
-    color: $fg;
-}
-
 #filter-sort {
     background: $surface;
     border: tall $surface1;
@@ -300,14 +286,6 @@ FilterPanel {
 
 #filter-sort:focus {
     border: tall $cyan;
-}
-
-#save-name {
-    background: $surface;
-    border: tall $cyan;
-    color: $fg;
-    width: 1fr;
-    margin-top: 1;
 }
 
 /* ── Vim search bar ──────────────────────────── */
@@ -330,137 +308,6 @@ FilterPanel {
     padding: 0 2;
     height: auto;
     margin-top: 1;
-}
-
-/* ── Saved searches tab ──────────────────────── */
-SavedSearchList {
-    height: 1fr;
-    background: $bg;
-    padding: 1 2;
-}
-
-#searches-inner {
-    height: 1fr;
-    background: $bg;
-}
-
-#searches-title {
-    color: $yellow;
-    text-style: bold;
-    margin-bottom: 1;
-}
-
-#searches-empty {
-    color: $comment;
-    padding: 1 0;
-}
-
-#searches-table {
-    background: $bg;
-    color: $fg;
-    height: 1fr;
-    border: tall $surface;
-    margin-bottom: 1;
-}
-
-#searches-buttons {
-    height: 3;
-    align: left middle;
-}
-
-#searches-apply {
-    width: auto;
-    min-width: 14;
-    background: $cyan;
-    color: $bg-deep;
-    border: tall $cyan;
-    text-style: bold;
-    margin-right: 1;
-}
-
-#searches-apply:hover {
-    background: $green;
-    color: $bg-deep;
-}
-
-#searches-delete {
-    width: auto;
-    min-width: 12;
-    background: $red;
-    color: $fg;
-    border: tall $red;
-}
-
-#searches-delete:hover {
-    background: $orange;
-}
-
-/* ── Saved search panel (modal) ──────────────── */
-SavedSearchPanel {
-    align: center middle;
-    background: $bg 70%;
-}
-
-#saved-container {
-    background: $bg-alt;
-    border: round $purple;
-    width: 70;
-    height: auto;
-    max-height: 30;
-    padding: 1 2;
-}
-
-#saved-title {
-    color: $yellow;
-    text-style: bold;
-    margin-bottom: 1;
-}
-
-#saved-table {
-    background: $bg-alt;
-    color: $fg;
-    height: auto;
-    max-height: 15;
-    border: tall $surface;
-}
-
-#saved-empty {
-    color: $comment;
-    padding: 1 0;
-}
-
-#saved-buttons {
-    height: 3;
-    align: right middle;
-    margin-top: 1;
-}
-
-#saved-close {
-    width: auto;
-    min-width: 8;
-    background: $surface;
-    color: $fg-sub;
-    border: tall $surface1;
-    margin-left: 1;
-}
-
-#saved-delete {
-    width: auto;
-    min-width: 8;
-    background: $red;
-    color: $fg;
-    border: tall $red;
-    margin-left: 1;
-}
-
-#saved-apply {
-    width: auto;
-    min-width: 8;
-    background: $cyan;
-    color: $bg-deep;
-    border: tall $cyan;
-    text-style: bold;
-    margin-left: 1;
 }
 
 /* ── Export panel ────────────────────────────── */

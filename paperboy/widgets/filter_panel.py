@@ -1,8 +1,6 @@
 """Filter panel modal for source, keyword, bookmark, and sort filtering."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
@@ -11,14 +9,6 @@ from textual.widgets import Button, Checkbox, Input, Label, OptionList, Select
 from textual.widgets.option_list import Option
 
 from paperboy.models import FilterState
-
-
-@dataclass
-class SavedFilterResult:
-    """Returned by FilterPanel when user chooses to save the search."""
-
-    state: FilterState
-    name: str
 
 
 _SORT_OPTIONS: list[tuple[str, str]] = [
@@ -48,7 +38,7 @@ def _decode_sort(value: str) -> tuple[str, bool]:
     return "date", True
 
 
-class FilterPanel(ModalScreen[FilterState | SavedFilterResult]):
+class FilterPanel(ModalScreen[FilterState]):
     """Modal for filtering papers by source, keywords, bookmark status, and sort order."""
 
     BINDINGS = [
@@ -59,7 +49,6 @@ class FilterPanel(ModalScreen[FilterState | SavedFilterResult]):
         super().__init__()
         self._sources = sources
         self._current = current
-        self._saving = False
 
     def compose(self) -> ComposeResult:
         options = ["All"] + self._sources
@@ -89,12 +78,7 @@ class FilterPanel(ModalScreen[FilterState | SavedFilterResult]):
             )
             with Horizontal(id="filter-buttons"):
                 yield Button("Cancel", id="filter-cancel", variant="default")
-                yield Button("Save…", id="filter-save", variant="default")
                 yield Button("Apply", id="filter-apply", variant="primary")
-            yield Input(
-                placeholder="Search name…",
-                id="save-name",
-            )
 
     def on_mount(self) -> None:
         ol = self.query_one("#filter-source-list", OptionList)
@@ -103,7 +87,6 @@ class FilterPanel(ModalScreen[FilterState | SavedFilterResult]):
             ol.highlighted = options.index(self._current.source)
         except ValueError:
             ol.highlighted = 0
-        self.query_one("#save-name", Input).display = False
         self.query_one("#filter-keywords", Input).focus()
 
     def action_cancel(self) -> None:
@@ -114,20 +97,6 @@ class FilterPanel(ModalScreen[FilterState | SavedFilterResult]):
             self.dismiss(self._build_state())
         elif event.button.id == "filter-cancel":
             self.dismiss(self._current)
-        elif event.button.id == "filter-save":
-            save_input = self.query_one("#save-name", Input)
-            save_input.display = True
-            save_input.focus()
-            self._saving = True
-
-    def on_input_submitted(self, event: Input.Submitted) -> None:
-        if event.input.id == "save-name" and self._saving:
-            name = event.value.strip()
-            if name:
-                self.dismiss(SavedFilterResult(state=self._build_state(), name=name))
-            else:
-                event.input.display = False
-                self._saving = False
 
     def _build_state(self) -> FilterState:
         ol = self.query_one("#filter-source-list", OptionList)
