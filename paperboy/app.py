@@ -35,6 +35,7 @@ from paperboy.widgets.detail_view import DetailView
 from paperboy.widgets.export_panel import ExportPanel
 from paperboy.widgets.filter_panel import FilterPanel
 from paperboy.widgets.paper_list import PaperList
+from paperboy.widgets.pdf_reader_screen import PdfReaderScreen
 from paperboy.widgets.source_panel import SourcePanel
 
 logger = logging.getLogger(__name__)
@@ -57,6 +58,7 @@ class ResearchFeedApp(App[None]):
         Binding("f", "filter", "Filter", show=True),
         Binding("e", "export", "Export", show=True),
         Binding("o", "open_pdf", "Open", show=True),
+        Binding("p", "read_pdf", "Read PDF", show=True),
         Binding("y", "copy_bibtex", "Copy BibTeX", show=False),
         Binding("j", "move_down", "Down", show=False),
         Binding("k", "move_up", "Up", show=False),
@@ -218,6 +220,12 @@ class ResearchFeedApp(App[None]):
 
     def action_open_pdf(self) -> None:
         self.query_one("#detail-view", DetailView).open_pdf()
+
+    def action_read_pdf(self) -> None:
+        detail = self.query_one("#detail-view", DetailView)
+        if detail._current_paper is None:
+            return
+        self.push_screen(PdfReaderScreen(detail._current_paper))
 
     def action_copy_bibtex(self) -> None:
         detail = self.query_one("#detail-view", DetailView)

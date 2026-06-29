@@ -347,6 +347,36 @@ FilterPanel {
     margin-top: 1;
 }
 
+/* ── PDF reader ──────────────────────────────── */
+PdfReaderScreen {
+    align: center middle;
+    background: $bg 80%;
+}
+
+#pdf-outer {
+    background: $bg-alt;
+    border: round $purple;
+    width: 90%;
+    height: 90%;
+    padding: 1 2;
+}
+
+#pdf-title {
+    color: $green;
+    text-style: bold;
+    margin-bottom: 1;
+}
+
+#pdf-status {
+    color: $comment;
+    height: 1;
+}
+
+#pdf-scroll {
+    height: 1fr;
+    background: $bg-alt;
+}
+
 /* ── Export panel ────────────────────────────── */
 ExportPanel {
     align: center middle;
